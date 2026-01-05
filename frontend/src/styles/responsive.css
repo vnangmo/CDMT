@@ -1,0 +1,435 @@
+/**
+ * CDMT Application - Responsive Styles
+ * REQ-COMP-02: Support for desktop computers and tablets
+ *
+ * Breakpoints:
+ * - Desktop: 1200px+
+ * - Tablet Landscape: 992px - 1199px
+ * - Tablet Portrait: 768px - 991px
+ * - Mobile (reference only): < 768px
+ */
+
+/* ==================== CSS Custom Properties ==================== */
+:root {
+  /* Spacing */
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 16px;
+  --spacing-lg: 24px;
+  --spacing-xl: 32px;
+
+  /* Container widths */
+  --container-max-width: 1400px;
+  --sidebar-width: 240px;
+
+  /* Typography scale */
+  --font-size-base: 14px;
+  --font-size-sm: 12px;
+  --font-size-lg: 16px;
+  --font-size-xl: 18px;
+  --font-size-2xl: 24px;
+  --font-size-3xl: 32px;
+}
+
+/* ==================== Base Responsive Container ==================== */
+.responsive-container {
+  width: 100%;
+  max-width: var(--container-max-width);
+  margin: 0 auto;
+  padding: 0 var(--spacing-lg);
+}
+
+/* ==================== Desktop (1200px+) ==================== */
+@media (min-width: 1200px) {
+  :root {
+    --font-size-base: 14px;
+    --spacing-lg: 24px;
+    --spacing-xl: 32px;
+  }
+
+  .responsive-container {
+    padding: 0 var(--spacing-xl);
+  }
+
+  /* Multi-column layouts */
+  .grid-2-cols {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--spacing-lg);
+  }
+
+  .grid-3-cols {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--spacing-lg);
+  }
+
+  .grid-4-cols {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: var(--spacing-lg);
+  }
+
+  /* Dashboard specific */
+  .dashboard-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: var(--spacing-lg);
+  }
+
+  /* Tables */
+  .data-table-container {
+    overflow-x: visible;
+  }
+}
+
+/* ==================== Tablet Landscape (992px - 1199px) ==================== */
+@media (min-width: 992px) and (max-width: 1199px) {
+  :root {
+    --font-size-base: 14px;
+    --spacing-lg: 20px;
+    --spacing-xl: 28px;
+    --sidebar-width: 220px;
+  }
+
+  .responsive-container {
+    padding: 0 var(--spacing-lg);
+  }
+
+  /* Adjust grids */
+  .grid-4-cols {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .dashboard-stats-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  /* Sidebar adjustment */
+  .MuiDrawer-paper,
+  .dashboard-sidebar {
+    width: var(--sidebar-width) !important;
+  }
+
+  /* Tables */
+  .data-table-container {
+    overflow-x: auto;
+  }
+
+  /* Cards */
+  .info-card,
+  .stat-card {
+    padding: var(--spacing-md);
+  }
+}
+
+/* ==================== Tablet Portrait (768px - 991px) ==================== */
+@media (min-width: 768px) and (max-width: 991px) {
+  :root {
+    --font-size-base: 13px;
+    --spacing-lg: 16px;
+    --spacing-xl: 24px;
+    --sidebar-width: 200px;
+  }
+
+  .responsive-container {
+    padding: 0 var(--spacing-md);
+  }
+
+  /* Collapse to 2 columns */
+  .grid-3-cols,
+  .grid-4-cols {
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--spacing-md);
+  }
+
+  .dashboard-stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--spacing-md);
+  }
+
+  /* Sidebar */
+  .MuiDrawer-paper,
+  .dashboard-sidebar {
+    width: var(--sidebar-width) !important;
+  }
+
+  /* Hide sidebar labels on smaller tablets */
+  .sidebar-menu .menu-label {
+    font-size: var(--font-size-sm);
+  }
+
+  /* Tables */
+  .data-table-container {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  table {
+    min-width: 600px;
+  }
+
+  /* Form layouts */
+  .form-row {
+    flex-direction: column;
+  }
+
+  .form-row > * {
+    width: 100%;
+    margin-bottom: var(--spacing-md);
+  }
+
+  /* Cards */
+  .info-card,
+  .stat-card {
+    padding: var(--spacing-md);
+  }
+
+  /* Modal dialogs */
+  .MuiDialog-paper {
+    width: 90% !important;
+    max-width: 90% !important;
+    margin: var(--spacing-md);
+  }
+
+  /* Charts */
+  .chart-container {
+    height: 300px;
+  }
+}
+
+/* ==================== Small Tablet / Large Mobile (576px - 767px) ==================== */
+@media (max-width: 767px) {
+  :root {
+    --font-size-base: 13px;
+    --spacing-lg: 12px;
+    --spacing-xl: 20px;
+  }
+
+  .responsive-container {
+    padding: 0 var(--spacing-sm);
+  }
+
+  /* Single column layouts */
+  .grid-2-cols,
+  .grid-3-cols,
+  .grid-4-cols {
+    grid-template-columns: 1fr;
+    gap: var(--spacing-md);
+  }
+
+  .dashboard-stats-grid {
+    grid-template-columns: 1fr;
+    gap: var(--spacing-md);
+  }
+
+  /* Hide sidebar - use mobile drawer */
+  .dashboard-sidebar {
+    display: none;
+  }
+
+  /* Mobile navigation */
+  .mobile-nav-toggle {
+    display: flex !important;
+  }
+
+  /* Tables scroll horizontally */
+  .data-table-container {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    margin: 0 calc(-1 * var(--spacing-sm));
+    padding: 0 var(--spacing-sm);
+  }
+
+  table {
+    min-width: 500px;
+  }
+
+  /* Stack form elements */
+  .form-group {
+    margin-bottom: var(--spacing-md);
+  }
+
+  /* Full width buttons */
+  .action-buttons {
+    flex-direction: column;
+  }
+
+  .action-buttons button {
+    width: 100%;
+    margin-bottom: var(--spacing-sm);
+  }
+
+  /* Charts */
+  .chart-container {
+    height: 250px;
+  }
+
+  /* Cards */
+  .MuiCard-root {
+    margin-bottom: var(--spacing-md);
+  }
+}
+
+/* ==================== Tablet-Specific Optimizations ==================== */
+@media (min-width: 768px) and (max-width: 1199px) {
+  /* Touch-friendly spacing */
+  .MuiButton-root,
+  button {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  .MuiIconButton-root {
+    padding: 12px;
+  }
+
+  /* Larger click targets for table rows */
+  .MuiTableRow-root {
+    min-height: 52px;
+  }
+
+  .MuiTableCell-root {
+    padding: 12px 16px;
+  }
+
+  /* Touch-friendly form inputs */
+  .MuiInputBase-root {
+    min-height: 44px;
+  }
+
+  .MuiOutlinedInput-input {
+    padding: 14px;
+  }
+
+  /* Dropdown menus */
+  .MuiMenu-paper {
+    max-height: 50vh;
+  }
+
+  .MuiMenuItem-root {
+    min-height: 44px;
+    padding: 12px 16px;
+  }
+
+  /* Tabs */
+  .MuiTab-root {
+    min-height: 48px;
+    padding: 12px 24px;
+  }
+
+  /* Tooltips - show on tap */
+  .MuiTooltip-popper {
+    pointer-events: auto;
+  }
+}
+
+/* ==================== Orientation-Specific Styles ==================== */
+@media (orientation: portrait) and (min-width: 768px) {
+  /* Portrait tablet adjustments */
+  .dashboard-layout {
+    flex-direction: column;
+  }
+
+  .sidebar-collapsible {
+    position: fixed;
+    z-index: 1200;
+    transform: translateX(-100%);
+    transition: transform 0.3s ease;
+  }
+
+  .sidebar-collapsible.open {
+    transform: translateX(0);
+  }
+}
+
+@media (orientation: landscape) and (min-width: 768px) and (max-width: 1199px) {
+  /* Landscape tablet - prioritize horizontal space */
+  .dashboard-sidebar {
+    width: 180px !important;
+  }
+
+  .sidebar-menu .menu-label {
+    font-size: 11px;
+  }
+}
+
+/* ==================== High DPI / Retina Display Support ==================== */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+  /* Sharper borders */
+  .MuiOutlinedInput-notchedOutline,
+  .MuiCard-root,
+  table {
+    border-width: 0.5px;
+  }
+
+  /* Sharper icons */
+  .MuiSvgIcon-root {
+    shape-rendering: geometricPrecision;
+  }
+}
+
+/* ==================== Utility Classes ==================== */
+
+/* Hide on specific breakpoints */
+.hide-desktop {
+  display: none !important;
+}
+
+.hide-tablet {
+  display: block;
+}
+
+.hide-mobile {
+  display: block;
+}
+
+@media (max-width: 1199px) {
+  .hide-desktop {
+    display: block !important;
+  }
+}
+
+@media (min-width: 768px) and (max-width: 1199px) {
+  .hide-tablet {
+    display: none !important;
+  }
+}
+
+@media (max-width: 767px) {
+  .hide-mobile {
+    display: none !important;
+  }
+}
+
+/* Scrollable tables wrapper */
+.table-responsive {
+  display: block;
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Full width on small screens */
+.full-width-mobile {
+  width: 100%;
+}
+
+@media (min-width: 768px) {
+  .full-width-mobile {
+    width: auto;
+  }
+}
+
+/* Stack elements on tablet */
+.stack-tablet {
+  display: flex;
+  flex-direction: row;
+  gap: var(--spacing-md);
+}
+
+@media (max-width: 991px) {
+  .stack-tablet {
+    flex-direction: column;
+  }
+}

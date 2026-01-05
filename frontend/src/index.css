@@ -1,3 +1,14 @@
+/**
+ * CDMT Application - Main Styles
+ * REQ-COMP-01: Browser compatibility (Chrome, Firefox, Edge, Safari - N and N-1)
+ * REQ-COMP-02: Device compatibility (Desktop, Tablet, Optimized printing)
+ */
+
+/* Import responsive and print styles */
+@import './styles/responsive.css';
+@import './styles/print.css';
+@import './styles/rtl.css';
+
 body {
   margin: 0;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
@@ -5,9 +16,81 @@ body {
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  /* Prevent horizontal scroll on mobile */
+  overflow-x: hidden;
 }
 
 code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
+}
+
+/* ==================== Cross-Browser Compatibility ==================== */
+
+/* Ensure consistent box-sizing */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+/* Normalize scroll behavior */
+html {
+  scroll-behavior: smooth;
+  /* Prevent font size adjustment on orientation change (iOS) */
+  -webkit-text-size-adjust: 100%;
+}
+
+/* Remove default button styles for cross-browser consistency */
+button {
+  font-family: inherit;
+  font-size: 100%;
+  line-height: 1.15;
+  margin: 0;
+  text-transform: none;
+  -webkit-appearance: button;
+}
+
+/* Focus visible for accessibility */
+:focus-visible {
+  outline: 2px solid #1976d2;
+  outline-offset: 2px;
+}
+
+/* Remove focus outline for mouse users */
+:focus:not(:focus-visible) {
+  outline: none;
+}
+
+/* ==================== Safari-Specific Fixes ==================== */
+
+/* Fix for Safari flexbox */
+@supports (-webkit-touch-callout: none) {
+  .flex-container {
+    display: -webkit-box;
+    display: -webkit-flex;
+    display: flex;
+  }
+}
+
+/* ==================== Table Responsiveness ==================== */
+
+.table-container {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* ==================== Print Button ==================== */
+
+.print-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+@media print {
+  .print-button {
+    display: none !important;
+  }
 }

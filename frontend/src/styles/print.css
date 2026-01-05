@@ -1,0 +1,404 @@
+/**
+ * CDMT Application - Print Styles
+ * REQ-COMP-02: Impression optimisée
+ *
+ * These styles optimize the application for printing reports,
+ * tables, and data visualizations.
+ */
+
+/* ==================== Print Media Query ==================== */
+@media print {
+  /* ==================== Global Print Settings ==================== */
+
+  /* Page setup */
+  @page {
+    size: A4;
+    margin: 15mm 10mm;
+  }
+
+  @page :first {
+    margin-top: 20mm;
+  }
+
+  /* Base styles */
+  *,
+  *::before,
+  *::after {
+    background: transparent !important;
+    color: #000 !important;
+    box-shadow: none !important;
+    text-shadow: none !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  html, body {
+    font-size: 11pt;
+    line-height: 1.4;
+    font-family: 'Times New Roman', Times, serif;
+  }
+
+  /* ==================== Hide Non-Essential Elements ==================== */
+
+  /* Navigation and UI controls */
+  .MuiDrawer-root,
+  .MuiAppBar-root,
+  .dashboard-sidebar,
+  .dashboard-nav,
+  nav,
+  header,
+  footer,
+  .sidebar-menu,
+  .no-print,
+  .hide-print {
+    display: none !important;
+  }
+
+  /* Interactive elements */
+  button,
+  .MuiButton-root,
+  .MuiIconButton-root,
+  .MuiFab-root,
+  .logout-button,
+  .action-button,
+  [role="button"] {
+    display: none !important;
+  }
+
+  /* Form elements (unless in data display) */
+  input:not([type="checkbox"]):not([type="radio"]),
+  select,
+  textarea,
+  .MuiTextField-root,
+  .MuiSelect-root,
+  .search-field,
+  .filter-controls {
+    display: none !important;
+  }
+
+  /* Notifications and tooltips */
+  .MuiTooltip-popper,
+  .MuiSnackbar-root,
+  .MuiAlert-root,
+  .notification-bell,
+  .NotificationCenter {
+    display: none !important;
+  }
+
+  /* Pagination controls */
+  .MuiTablePagination-root,
+  .pagination-controls {
+    display: none !important;
+  }
+
+  /* ==================== Layout Adjustments ==================== */
+
+  /* Full width content */
+  .dashboard-content,
+  .dashboard-layout,
+  .MuiContainer-root,
+  main,
+  .main-content {
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  /* Cards and containers */
+  .MuiCard-root,
+  .MuiPaper-root,
+  .card,
+  .panel {
+    break-inside: avoid;
+    page-break-inside: avoid;
+    border: 1px solid #ddd !important;
+    margin-bottom: 10mm;
+  }
+
+  /* ==================== Typography ==================== */
+
+  h1 {
+    font-size: 18pt;
+    margin-bottom: 8mm;
+    page-break-after: avoid;
+  }
+
+  h2 {
+    font-size: 14pt;
+    margin-bottom: 5mm;
+    page-break-after: avoid;
+  }
+
+  h3 {
+    font-size: 12pt;
+    margin-bottom: 4mm;
+    page-break-after: avoid;
+  }
+
+  p, li, td, th {
+    font-size: 10pt;
+    orphans: 3;
+    widows: 3;
+  }
+
+  /* ==================== Tables ==================== */
+
+  table,
+  .MuiTable-root {
+    width: 100% !important;
+    border-collapse: collapse;
+    font-size: 9pt;
+  }
+
+  th,
+  .MuiTableCell-head {
+    background-color: #f0f0f0 !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    font-weight: bold !important;
+    border: 1px solid #999 !important;
+    padding: 4mm 2mm !important;
+    text-align: left;
+  }
+
+  td,
+  .MuiTableCell-body {
+    border: 1px solid #ccc !important;
+    padding: 3mm 2mm !important;
+    vertical-align: top;
+  }
+
+  /* Zebra striping for tables */
+  tr:nth-child(even),
+  .MuiTableRow-root:nth-child(even) {
+    background-color: #f9f9f9 !important;
+  }
+
+  /* Table header repeat on new pages */
+  thead {
+    display: table-header-group;
+  }
+
+  /* Avoid breaking inside rows */
+  tr,
+  .MuiTableRow-root {
+    page-break-inside: avoid;
+  }
+
+  /* ==================== Data Grids ==================== */
+
+  .MuiDataGrid-root {
+    border: 1px solid #ccc !important;
+  }
+
+  .MuiDataGrid-columnHeaders {
+    background-color: #f0f0f0 !important;
+  }
+
+  .MuiDataGrid-cell {
+    border-bottom: 1px solid #ddd !important;
+    padding: 2mm !important;
+  }
+
+  .MuiDataGrid-footerContainer {
+    display: none !important;
+  }
+
+  /* ==================== Charts and Graphs ==================== */
+
+  /* Recharts and SVG */
+  .recharts-wrapper,
+  .recharts-surface,
+  svg {
+    max-width: 100% !important;
+    height: auto !important;
+    page-break-inside: avoid;
+  }
+
+  .recharts-legend-wrapper {
+    position: relative !important;
+    margin-top: 5mm;
+  }
+
+  /* ==================== Status Badges and Chips ==================== */
+
+  .MuiChip-root,
+  .status-badge,
+  .badge {
+    border: 1px solid #666 !important;
+    padding: 1mm 3mm !important;
+    font-size: 8pt !important;
+  }
+
+  /* Status colors for print */
+  .status-approved,
+  .status-success {
+    background-color: #e8f5e9 !important;
+    border-color: #4caf50 !important;
+  }
+
+  .status-pending,
+  .status-warning {
+    background-color: #fff3e0 !important;
+    border-color: #ff9800 !important;
+  }
+
+  .status-rejected,
+  .status-error {
+    background-color: #ffebee !important;
+    border-color: #f44336 !important;
+  }
+
+  /* ==================== Links ==================== */
+
+  a,
+  a:visited {
+    text-decoration: underline;
+    color: #000 !important;
+  }
+
+  /* Show URLs after links */
+  a[href^="http"]:after,
+  a[href^="https"]:after {
+    content: " (" attr(href) ")";
+    font-size: 8pt;
+    color: #666 !important;
+  }
+
+  /* Don't show URLs for internal links */
+  a[href^="#"]:after,
+  a[href^="javascript"]:after,
+  a.no-print-url:after {
+    content: "";
+  }
+
+  /* ==================== Page Breaks ==================== */
+
+  .page-break-before {
+    page-break-before: always;
+  }
+
+  .page-break-after {
+    page-break-after: always;
+  }
+
+  .no-page-break {
+    page-break-inside: avoid;
+  }
+
+  /* Break before major sections */
+  .section-header,
+  .report-section {
+    page-break-before: always;
+  }
+
+  .section-header:first-child {
+    page-break-before: avoid;
+  }
+
+  /* ==================== Print Header/Footer ==================== */
+
+  .print-header {
+    display: block !important;
+    text-align: center;
+    margin-bottom: 10mm;
+    padding-bottom: 5mm;
+    border-bottom: 1px solid #000;
+  }
+
+  .print-header h1 {
+    font-size: 16pt;
+    margin: 0 0 2mm 0;
+  }
+
+  .print-header .print-date {
+    font-size: 9pt;
+    color: #666 !important;
+  }
+
+  .print-footer {
+    display: block !important;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    text-align: center;
+    font-size: 8pt;
+    padding: 5mm;
+    border-top: 1px solid #ccc;
+  }
+
+  /* ==================== Specific CDMT Components ==================== */
+
+  /* TOFE Tables */
+  .tofe-table th,
+  .tofe-table td {
+    font-size: 8pt !important;
+    padding: 2mm 1mm !important;
+  }
+
+  /* CBMT Tables */
+  .cbmt-table,
+  .budget-table {
+    font-size: 8pt;
+  }
+
+  .cbmt-table th {
+    white-space: nowrap;
+  }
+
+  /* Access Matrix */
+  .access-matrix-table {
+    font-size: 7pt;
+  }
+
+  .access-matrix-table th,
+  .access-matrix-table td {
+    padding: 1mm !important;
+    text-align: center;
+  }
+
+  /* Dashboard Stats */
+  .stat-card,
+  .dashboard-stat {
+    display: inline-block;
+    width: 30%;
+    margin: 2mm;
+    padding: 5mm;
+    border: 1px solid #ccc;
+    text-align: center;
+  }
+
+  /* ==================== Utility Classes ==================== */
+
+  .print-only {
+    display: block !important;
+  }
+
+  .screen-only {
+    display: none !important;
+  }
+
+  /* Show all collapsed content */
+  .MuiCollapse-hidden,
+  [aria-expanded="false"] + .collapse-content {
+    display: block !important;
+    height: auto !important;
+    visibility: visible !important;
+  }
+
+  /* Expand all accordions */
+  .MuiAccordionDetails-root {
+    display: block !important;
+  }
+}
+
+/* ==================== Screen-only utility ==================== */
+@media screen {
+  .print-only,
+  .print-header,
+  .print-footer {
+    display: none !important;
+  }
+}
