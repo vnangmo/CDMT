@@ -211,6 +211,8 @@ import settingsRoutes from './routes/settings.routes';
 import dashboardRoutes from './routes/dashboard.routes';
 import customExportRoutes from './routes/customExport.routes';
 import roleRoutes from './routes/role.routes';
+import permissionRoutes from './routes/permission.routes';
+import cdsmtSynthesisRoutes from './routes/cdsmtSynthesis.routes';
 
 // Import audit and scheduler utilities
 import { setupAuditMiddleware } from './middleware/audit.middleware';
@@ -291,6 +293,10 @@ app.use(`${config.apiPrefix}/export`, customExportRoutes);
 
 // Role and Permission management routes
 app.use(`${config.apiPrefix}/roles`, roleRoutes);
+app.use(`${config.apiPrefix}/permissions`, permissionRoutes);
+
+// CDSMT Synthesis routes (Maquette CDSMT - Figure 10 du guide)
+app.use(`${config.apiPrefix}/cdsmt-synthesis`, cdsmtSynthesisRoutes);
 
 // 404 handler
 app.use((req: Request, res: Response) => {

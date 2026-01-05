@@ -719,6 +719,12 @@ model FundingSource {
   type              String
   description       String?
   isActive          Boolean            @default(true)
+
+  // Distinction financement interne/externe selon le guide CDMT
+  // Financement interne = ressources nationales (Trésor, budget État)
+  // Financement externe = dons, prêts internationaux, PTF
+  isExternal        Boolean            @default(false)
+
   createdAt         DateTime           @default(now())
   updatedAt         DateTime           @updatedAt
   historicalBudgets HistoricalBudget[]
@@ -1388,6 +1394,11 @@ model PolicyMeasure {
   measureName String
   description String?
   category    String? // "PERSONNEL", "INVESTMENT", "OPERATION", "OTHER"
+
+  // Type de mesure selon le guide méthodologique CDMT (page 18)
+  // TYPE_1 = Mesures centrales (niveau gouvernemental/Ministère des Finances)
+  // TYPE_2 = Mesures sectorielles (niveau ministériel)
+  measureType String @default("TYPE_1") // TYPE_1 ou TYPE_2
 
   // Montants par année (peuvent être positifs ou négatifs)
   amountY1 Decimal @db.Decimal(15, 2)
