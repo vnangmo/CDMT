@@ -169,7 +169,7 @@ const NotificationCenter: React.FC = () => {
             </Typography>
           </Box>
         ) : (
-          <>
+          <Box>
             <List sx={{ maxHeight: 300, overflow: 'auto', py: 0 }}>
               {notifications.map((notification) => (
                 <React.Fragment key={notification.id}>
@@ -201,7 +201,7 @@ const NotificationCenter: React.FC = () => {
                         </Typography>
                       }
                       secondary={
-                        <>
+                        <Box component="span">
                           <Typography
                             variant="body2"
                             color="text.secondary"
@@ -212,7 +212,7 @@ const NotificationCenter: React.FC = () => {
                           <Typography variant="caption" color="text.secondary">
                             {getTimeAgo(notification.timestamp)}
                           </Typography>
-                        </>
+                        </Box>
                       }
                     />
                   </ListItemButton>
@@ -234,7 +234,7 @@ const NotificationCenter: React.FC = () => {
                 {t('notifications.viewAll')}
               </Button>
             </Box>
-          </>
+          </Box>
         )}
       </Menu>
     </>

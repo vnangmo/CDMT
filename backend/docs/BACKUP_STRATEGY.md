@@ -1,7 +1,7 @@
 # CDMT Application - Automated Backup Strategy
 
-**Document Version:** 1.0
-**Last Updated:** 2026-01-04
+**Document Version:** 1.1
+**Last Updated:** 2026-01-05
 **Sprint:** 8.2 - Security & Testing
 
 ---
@@ -13,7 +13,7 @@ This document outlines the comprehensive backup strategy for the CDMT applicatio
 **Backup Objectives:**
 - **RPO (Recovery Point Objective):** ≤ 1 hour (maximum data loss acceptable)
 - **RTO (Recovery Time Objective):** ≤ 4 hours (maximum downtime acceptable)
-- **Retention:** 30 days daily, 12 months monthly
+- **Retention:** 30 days daily, **5 years minimum** (REQ-SEC-03)
 - **Encryption:** AES-256 for backups at rest
 
 ---
@@ -239,21 +239,23 @@ s3://cdmt-backups/
 
 ### 4.2 Storage Classes
 
-| Backup Type | S3 Storage Class | Transition |
-|------------|------------------|------------|
-| Daily DB (0-7 days) | STANDARD | - |
-| Weekly DB (8-30 days) | STANDARD_IA | After 7 days |
-| Monthly DB (31-365 days) | GLACIER_IR | After 30 days |
-| Old backups (>365 days) | DEEP_ARCHIVE | After 365 days |
+> **REQ-SEC-03:** Rétention sur 5 ans minimum (1825 jours)
+
+| Backup Type | S3 Storage Class | Transition | Retention |
+|------------|------------------|------------|-----------|
+| Daily DB (0-7 days) | STANDARD | - | 30 days |
+| Weekly DB (8-30 days) | STANDARD_IA | After 7 days | 90 days |
+| Monthly DB (31-365 days) | GLACIER_IR | After 30 days | 5 years |
+| Yearly archives (>365 days) | DEEP_ARCHIVE | After 365 days | **5+ years** |
 
 ### 4.3 Lifecycle Policy
 
-**S3 lifecycle configuration:**
+**S3 lifecycle configuration (5-year retention - REQ-SEC-03):**
 ```json
 {
   "Rules": [
     {
-      "Id": "TransitionDailyBackups",
+      "Id": "CDMTBackupRetention5Years",
       "Status": "Enabled",
       "Transitions": [
         {
@@ -270,12 +272,15 @@ s3://cdmt-backups/
         }
       ],
       "Expiration": {
-        "Days": 2555
+        "Days": 1825,
+        "Comment": "REQ-SEC-03: 5 years minimum retention"
       }
     }
   ]
 }
 ```
+
+> **Note:** Les sauvegardes sont conservées pendant 5 ans (1825 jours) conformément à REQ-SEC-03. Les archives DEEP_ARCHIVE permettent un stockage économique pour la rétention longue durée.
 
 ---
 

@@ -72,6 +72,7 @@ export class AuthService {
 
   /**
    * Connexion utilisateur
+   * REQ-SEC-01: Support pour l'authentification à deux facteurs (2FA)
    */
   static async login(credentials: LoginCredentials) {
     const { email, password } = credentials;
@@ -113,7 +114,17 @@ export class AuthService {
       throw new UnauthorizedError('Email ou mot de passe incorrect');
     }
 
-    // Générer les tokens
+    // Vérifier si la 2FA est activée
+    if (user.twoFactorEnabled) {
+      // Retourner une réponse partielle indiquant que la 2FA est requise
+      return {
+        requiresTwoFactor: true,
+        userId: user.id,
+        message: 'Authentification à deux facteurs requise',
+      };
+    }
+
+    // Générer les tokens (si pas de 2FA)
     const tokenPayload: TokenPayload = {
       userId: user.id,
       email: user.email,
@@ -140,6 +151,92 @@ export class AuthService {
     });
 
     // Retourner les données utilisateur et les tokens
+    return {
+      requiresTwoFactor: false,
+      user: {
+        id: user.id,
+        email: user.email,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        phone: user.phone,
+        role: {
+          id: user.role.id,
+          code: user.role.code,
+          name: user.role.name,
+          permissions: user.role.permissions.map((rp) => ({
+            code: rp.permission.code,
+            name: rp.permission.name,
+            module: rp.permission.module,
+            canCreate: rp.canCreate,
+            canRead: rp.canRead,
+            canUpdate: rp.canUpdate,
+            canDelete: rp.canDelete,
+            canValidate: rp.canValidate,
+          })),
+        },
+        ministry: user.ministry
+          ? {
+              id: user.ministry.id,
+              code: user.ministry.code,
+              name: user.ministry.name,
+            }
+          : null,
+      },
+      token,
+      refreshToken,
+    };
+  }
+
+  /**
+   * Compléter la connexion après vérification 2FA
+   */
+  static async completeTwoFactorLogin(userId: string) {
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      include: {
+        role: {
+          include: {
+            permissions: {
+              include: {
+                permission: true,
+              },
+            },
+          },
+        },
+        ministry: true,
+      },
+    });
+
+    if (!user) {
+      throw new UnauthorizedError('Utilisateur non trouvé');
+    }
+
+    // Générer les tokens
+    const tokenPayload: TokenPayload = {
+      userId: user.id,
+      email: user.email,
+      roleId: user.roleId,
+    };
+
+    const token = this.generateToken(tokenPayload);
+    const refreshToken = this.generateRefreshToken(tokenPayload);
+
+    // Mettre à jour la dernière connexion
+    await prisma.user.update({
+      where: { id: user.id },
+      data: { lastLogin: new Date() },
+    });
+
+    // Logger l'événement de connexion
+    await prisma.auditLog.create({
+      data: {
+        userId: user.id,
+        action: 'LOGIN_2FA',
+        entity: 'User',
+        entityId: user.id,
+      },
+    });
+
     return {
       user: {
         id: user.id,

@@ -8,25 +8,30 @@ datasource db {
 }
 
 model User {
-  id              String            @id @default(uuid())
-  email           String            @unique
-  password        String
-  firstName       String
-  lastName        String
-  phone           String?
-  isActive        Boolean           @default(true)
-  roleId          String
-  ministryId      String?
-  createdAt       DateTime          @default(now())
-  updatedAt       DateTime          @updatedAt
-  lastLogin       DateTime?
-  auditLogs       AuditLog[]
-  comments        Comment[]
-  notifications   Notification[]
-  workflowActions WorkflowHistory[]
-  ministry        Ministry?         @relation(fields: [ministryId], references: [id])
-  role            Role              @relation(fields: [roleId], references: [id])
-  settings        UserSettings?
+  id                    String            @id @default(uuid())
+  email                 String            @unique
+  password              String
+  firstName             String
+  lastName              String
+  phone                 String?
+  isActive              Boolean           @default(true)
+  roleId                String
+  ministryId            String?
+  createdAt             DateTime          @default(now())
+  updatedAt             DateTime          @updatedAt
+  lastLogin             DateTime?
+  // Two-Factor Authentication (2FA) - REQ-SEC-01
+  twoFactorEnabled      Boolean           @default(false)
+  twoFactorSecret       String?           // Encrypted TOTP secret
+  twoFactorBackupCodes  String[]          // Recovery codes (hashed)
+  twoFactorVerifiedAt   DateTime?         // Last 2FA verification timestamp
+  auditLogs             AuditLog[]
+  comments              Comment[]
+  notifications         Notification[]
+  workflowActions       WorkflowHistory[]
+  ministry              Ministry?         @relation(fields: [ministryId], references: [id])
+  role                  Role              @relation(fields: [roleId], references: [id])
+  settings              UserSettings?
 
   @@map("users")
 }
