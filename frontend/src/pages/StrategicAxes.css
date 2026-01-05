@@ -1,0 +1,17 @@
+.strategic-axes-page {
+  padding: 24px;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.axis-form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+@media (max-width: 768px) {
+  .strategic-axes-page {
+    padding: 16px;
+  }
+}

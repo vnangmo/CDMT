@@ -1,0 +1,81 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database (optionnel si déjà installé localement)
+  # postgres:
+  #   image: postgres:15-alpine
+  #   container_name: cdmt-postgres
+  #   restart: unless-stopped
+  #   environment:
+  #     POSTGRES_USER: postgres
+  #     POSTGRES_PASSWORD: union
+  #     POSTGRES_DB: cdmt_db
+  #   ports:
+  #     - "5432:5432"
+  #   volumes:
+  #     - postgres_data:/var/lib/postgresql/data
+  #   networks:
+  #     - cdmt-network
+
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    container_name: cdmt-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes
+    networks:
+      - cdmt-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+  # Backend API (à décommenter après le build)
+  # backend:
+  #   build:
+  #     context: ./backend
+  #     dockerfile: Dockerfile
+  #   container_name: cdmt-backend
+  #   restart: unless-stopped
+  #   ports:
+  #     - "5000:5000"
+  #   environment:
+  #     NODE_ENV: production
+  #     DATABASE_URL: postgresql://postgres:union@postgres:5432/cdmt_db?schema=public
+  #     REDIS_HOST: redis
+  #     REDIS_PORT: 6379
+  #   depends_on:
+  #     - postgres
+  #     - redis
+  #   networks:
+  #     - cdmt-network
+  #   volumes:
+  #     - ./backend/uploads:/app/uploads
+  #     - ./backend/logs:/app/logs
+
+  # Frontend (à décommenter après le build)
+  # frontend:
+  #   build:
+  #     context: ./frontend
+  #     dockerfile: Dockerfile
+  #   container_name: cdmt-frontend
+  #   restart: unless-stopped
+  #   ports:
+  #     - "3000:80"
+  #   depends_on:
+  #     - backend
+  #   networks:
+  #     - cdmt-network
+
+networks:
+  cdmt-network:
+    driver: bridge
+
+volumes:
+  # postgres_data:
+  redis_data:

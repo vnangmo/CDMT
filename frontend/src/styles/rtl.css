@@ -1,0 +1,331 @@
+/* RTL (Right-to-Left) Support for Arabic Language */
+
+/* Apply RTL direction to the entire document when in Arabic */
+[dir='rtl'] {
+  direction: rtl;
+  text-align: right;
+}
+
+/* Reverse flex direction for navigation and layouts */
+[dir='rtl'] .flex-row,
+[dir='rtl'] .MuiStack-root {
+  flex-direction: row-reverse;
+}
+
+/* Reverse padding and margin */
+[dir='rtl'] .padding-left {
+  padding-left: 0;
+  padding-right: var(--spacing, 1rem);
+}
+
+[dir='rtl'] .padding-right {
+  padding-right: 0;
+  padding-left: var(--spacing, 1rem);
+}
+
+[dir='rtl'] .margin-left {
+  margin-left: 0;
+  margin-right: var(--spacing, 1rem);
+}
+
+[dir='rtl'] .margin-right {
+  margin-right: 0;
+  margin-left: var(--spacing, 1rem);
+}
+
+/* Reverse Material-UI drawer */
+[dir='rtl'] .MuiDrawer-paperAnchorLeft {
+  left: auto;
+  right: 0;
+}
+
+[dir='rtl'] .MuiDrawer-paperAnchorRight {
+  right: auto;
+  left: 0;
+}
+
+/* Reverse sidebar */
+[dir='rtl'] .sidebar {
+  left: auto;
+  right: 0;
+}
+
+/* Main content margin adjustment for RTL */
+[dir='rtl'] .main-content {
+  margin-left: 0;
+  margin-right: 240px; /* Sidebar width */
+}
+
+/* Reverse text alignment for table headers */
+[dir='rtl'] .MuiTableCell-head {
+  text-align: right;
+}
+
+[dir='rtl'] .MuiTableCell-body {
+  text-align: right;
+}
+
+/* Reverse icons in buttons */
+[dir='rtl'] .MuiButton-startIcon {
+  margin-left: 8px;
+  margin-right: -4px;
+}
+
+[dir='rtl'] .MuiButton-endIcon {
+  margin-right: 8px;
+  margin-left: -4px;
+}
+
+/* Reverse list item icons */
+[dir='rtl'] .MuiListItemIcon-root {
+  margin-right: 0;
+  margin-left: 16px;
+}
+
+/* Reverse breadcrumb separators */
+[dir='rtl'] .MuiBreadcrumbs-separator {
+  transform: scaleX(-1);
+}
+
+/* Reverse input icons */
+[dir='rtl'] .MuiInputAdornment-positionStart {
+  margin-right: 0;
+  margin-left: 8px;
+}
+
+[dir='rtl'] .MuiInputAdornment-positionEnd {
+  margin-left: 0;
+  margin-right: 8px;
+}
+
+/* Reverse checkbox and radio alignment */
+[dir='rtl'] .MuiFormControlLabel-root {
+  margin-left: 16px;
+  margin-right: -11px;
+}
+
+/* Reverse stepper icons */
+[dir='rtl'] .MuiStepConnector-line {
+  border-left-width: 0;
+  border-right-width: 1px;
+}
+
+/* Reverse chip delete icon */
+[dir='rtl'] .MuiChip-deleteIcon {
+  margin-left: -6px;
+  margin-right: 5px;
+}
+
+/* Reverse dialog actions */
+[dir='rtl'] .MuiDialogActions-root > :not(:first-of-type) {
+  margin-left: 0;
+  margin-right: 8px;
+}
+
+/* Reverse pagination */
+[dir='rtl'] .MuiPaginationItem-previousNext {
+  transform: scaleX(-1);
+}
+
+/* Reverse expansion panel summary icons */
+[dir='rtl'] .MuiAccordionSummary-expandIconWrapper {
+  transform: rotate(-90deg);
+}
+
+[dir='rtl'] .MuiAccordionSummary-expandIconWrapper.Mui-expanded {
+  transform: rotate(0deg);
+}
+
+/* Custom form field alignment */
+[dir='rtl'] .form-field label {
+  text-align: right;
+}
+
+[dir='rtl'] .form-field input,
+[dir='rtl'] .form-field select,
+[dir='rtl'] .form-field textarea {
+  text-align: right;
+}
+
+/* Reverse floating action button position */
+[dir='rtl'] .fab-bottom-right {
+  left: 16px;
+  right: auto;
+}
+
+[dir='rtl'] .fab-bottom-left {
+  right: 16px;
+  left: auto;
+}
+
+/* Reverse tooltip arrow */
+[dir='rtl'] .MuiTooltip-tooltipPlacementLeft {
+  margin: 0 14px 0 0;
+}
+
+[dir='rtl'] .MuiTooltip-tooltipPlacementRight {
+  margin: 0 0 0 14px;
+}
+
+/* Reverse snackbar position */
+[dir='rtl'] .MuiSnackbar-anchorOriginTopRight {
+  left: 24px;
+  right: auto;
+}
+
+[dir='rtl'] .MuiSnackbar-anchorOriginTopLeft {
+  right: 24px;
+  left: auto;
+}
+
+/* Reverse data table action buttons */
+[dir='rtl'] .table-actions {
+  justify-content: flex-start;
+}
+
+/* Reverse sort icons in table headers */
+[dir='rtl'] .MuiTableSortLabel-icon {
+  margin-left: 0;
+  margin-right: 4px;
+}
+
+/* Numbers should always be LTR even in RTL context */
+[dir='rtl'] .number,
+[dir='rtl'] .amount,
+[dir='rtl'] .currency,
+[dir='rtl'] .percentage {
+  direction: ltr;
+  display: inline-block;
+}
+
+/* Dates should maintain LTR for consistency */
+[dir='rtl'] .date,
+[dir='rtl'] .datetime {
+  direction: ltr;
+  display: inline-block;
+}
+
+/* Chart containers should remain LTR for data visualization */
+[dir='rtl'] .chart-container,
+[dir='rtl'] .recharts-wrapper {
+  direction: ltr;
+}
+
+/* Code blocks should remain LTR */
+[dir='rtl'] code,
+[dir='rtl'] pre {
+  direction: ltr;
+  text-align: left;
+}
+
+/* Email addresses and URLs should remain LTR */
+[dir='rtl'] .email,
+[dir='rtl'] .url {
+  direction: ltr;
+  display: inline-block;
+}
+
+/* Custom data table for CDMT */
+[dir='rtl'] .data-table {
+  direction: rtl;
+}
+
+[dir='rtl'] .data-table th,
+[dir='rtl'] .data-table td {
+  text-align: right;
+}
+
+[dir='rtl'] .data-table .actions-column {
+  text-align: left;
+}
+
+/* Dashboard cards */
+[dir='rtl'] .dashboard-card {
+  text-align: right;
+}
+
+[dir='rtl'] .dashboard-card .card-icon {
+  margin-left: 16px;
+  margin-right: 0;
+}
+
+/* Budget visualization */
+[dir='rtl'] .budget-bar {
+  direction: ltr; /* Keep progress bars LTR for consistency */
+}
+
+/* Ministry selector */
+[dir='rtl'] .ministry-select .MuiSelect-icon {
+  left: 7px;
+  right: auto;
+}
+
+/* Document export buttons */
+[dir='rtl'] .export-buttons {
+  flex-direction: row-reverse;
+}
+
+/* Workflow steps */
+[dir='rtl'] .workflow-step {
+  text-align: right;
+}
+
+[dir='rtl'] .workflow-connector {
+  transform: scaleX(-1);
+}
+
+/* Validation messages */
+[dir='rtl'] .error-message,
+[dir='rtl'] .success-message,
+[dir='rtl'] .warning-message {
+  text-align: right;
+}
+
+/* Login form */
+[dir='rtl'] .login-form {
+  text-align: right;
+}
+
+[dir='rtl'] .login-form input {
+  text-align: right;
+  padding-right: 14px;
+  padding-left: 14px;
+}
+
+/* Navigation menu */
+[dir='rtl'] .nav-menu {
+  text-align: right;
+}
+
+[dir='rtl'] .nav-menu-item {
+  padding-right: 16px;
+  padding-left: 8px;
+}
+
+/* Mobile responsive adjustments */
+@media (max-width: 768px) {
+  [dir='rtl'] .mobile-menu {
+    right: auto;
+    left: 0;
+  }
+
+  [dir='rtl'] .mobile-drawer {
+    right: 0;
+    left: auto;
+  }
+}
+
+/* Print styles for RTL */
+@media print {
+  [dir='rtl'] {
+    direction: rtl;
+  }
+
+  [dir='rtl'] .page-header {
+    text-align: right;
+  }
+
+  [dir='rtl'] .page-footer {
+    text-align: right;
+  }
+}

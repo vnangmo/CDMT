@@ -1,0 +1,17 @@
+.programs-page {
+  padding: 24px;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.program-form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+@media (max-width: 768px) {
+  .programs-page {
+    padding: 16px;
+  }
+}

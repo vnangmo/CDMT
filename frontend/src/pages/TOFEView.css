@@ -1,0 +1,512 @@
+.tofe-view-page {
+  padding: 24px;
+  max-width: 1800px;
+  margin: 0 auto;
+}
+
+.tofe-header-actions {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 24px;
+  justify-content: flex-start;
+  align-items: center;
+}
+
+.tofe-info-card {
+  background-color: #ffffff;
+  border-radius: 8px;
+  padding: 20px;
+  margin-bottom: 24px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.info-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+}
+
+.info-item label {
+  display: block;
+  font-size: 12px;
+  color: #718096;
+  margin-bottom: 4px;
+  font-weight: 500;
+  text-transform: uppercase;
+}
+
+.info-item p {
+  margin: 0;
+  font-size: 14px;
+  color: #1a202c;
+  font-weight: 600;
+}
+
+.status-badge {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.status-badge.status-draft {
+  background-color: #fed7d7;
+  color: #742a2a;
+}
+
+.status-badge.status-validated {
+  background-color: #bee3f8;
+  color: #2c5282;
+}
+
+.status-badge.status-approved {
+  background-color: #c6f6d5;
+  color: #22543d;
+}
+
+.tofe-tabs {
+  display: flex;
+  gap: 0;
+  border-bottom: 2px solid #e2e8f0;
+  margin-bottom: 24px;
+}
+
+.tab-button {
+  padding: 12px 24px;
+  border: none;
+  background: none;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  color: #718096;
+  border-bottom: 3px solid transparent;
+  transition: all 0.2s;
+  position: relative;
+  bottom: -2px;
+}
+
+.tab-button:hover {
+  color: #2563eb;
+}
+
+.tab-button.active {
+  color: #2563eb;
+  border-bottom-color: #2563eb;
+}
+
+/* TOFE Table */
+.tofe-document-section {
+  background-color: #ffffff;
+  border-radius: 8px;
+  padding: 24px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.tofe-table-container {
+  overflow-x: auto;
+}
+
+.tofe-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.tofe-table thead th {
+  background-color: #f7fafc;
+  padding: 12px 8px;
+  text-align: left;
+  font-weight: 700;
+  color: #2d3748;
+  border-bottom: 2px solid #e2e8f0;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.tofe-table tbody tr {
+  border-bottom: 1px solid #e2e8f0;
+  transition: background-color 0.2s;
+}
+
+.tofe-table tbody tr:hover {
+  background-color: #f7fafc;
+}
+
+.tofe-table tbody tr.tofe-line.bold {
+  font-weight: 700;
+  background-color: #f7fafc;
+}
+
+.tofe-table tbody tr.balance-line {
+  background-color: #fff5f5;
+  border-top: 2px solid #e53e3e;
+  border-bottom: 2px solid #e53e3e;
+}
+
+.tofe-table tbody tr.balance-line td {
+  font-weight: 700;
+  color: #c53030;
+}
+
+.tofe-table tbody tr.level-0 {
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.tofe-table td {
+  padding: 10px 8px;
+}
+
+.tofe-table td.line-code {
+  font-family: 'Courier New', monospace;
+  color: #4a5568;
+  font-weight: 600;
+}
+
+.tofe-table td.line-label {
+  color: #1a202c;
+}
+
+.tofe-table td.line-gfs {
+  font-family: 'Courier New', monospace;
+  color: #718096;
+  font-size: 11px;
+  text-align: center;
+}
+
+.tofe-table td.line-amount {
+  text-align: right;
+  font-family: 'Courier New', monospace;
+  font-weight: 600;
+  color: #2d3748;
+}
+
+/* Analysis Section */
+.tofe-analysis-section {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.analysis-card {
+  background-color: #ffffff;
+  border-radius: 8px;
+  padding: 24px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.analysis-card h3 {
+  margin: 0 0 16px 0;
+  font-size: 18px;
+  font-weight: 700;
+  color: #1a202c;
+}
+
+.balance-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 16px;
+}
+
+.balance-card {
+  background-color: #f7fafc;
+  border-radius: 8px;
+  padding: 16px;
+  border: 1px solid #e2e8f0;
+}
+
+.balance-card h4 {
+  margin: 0 0 12px 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: #2d3748;
+  text-align: center;
+  padding-bottom: 8px;
+  border-bottom: 2px solid #cbd5e0;
+}
+
+.balance-details {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.balance-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 0;
+}
+
+.balance-row.total {
+  margin-top: 8px;
+  padding-top: 12px;
+  border-top: 2px solid #cbd5e0;
+}
+
+.balance-label {
+  font-size: 13px;
+  color: #4a5568;
+  font-weight: 500;
+}
+
+.balance-amount {
+  font-size: 14px;
+  font-weight: 700;
+  font-family: 'Courier New', monospace;
+}
+
+.balance-amount.revenue {
+  color: #2f855a;
+}
+
+.balance-amount.expense {
+  color: #c53030;
+}
+
+.balance-amount.surplus {
+  color: #2f855a;
+}
+
+.balance-amount.deficit {
+  color: #c05621;
+}
+
+.balance-amount.balanced {
+  color: #2d3748;
+}
+
+.balance-type {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid #e2e8f0;
+}
+
+.type-badge {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.type-badge.surplus {
+  background-color: #c6f6d5;
+  color: #22543d;
+}
+
+.type-badge.deficit {
+  background-color: #feebc8;
+  color: #7c2d12;
+}
+
+.type-badge.balanced {
+  background-color: #e2e8f0;
+  color: #2d3748;
+}
+
+.balance-ratio {
+  font-size: 12px;
+  color: #4a5568;
+  font-weight: 600;
+}
+
+/* Ratios Table */
+.ratios-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.ratios-table thead th {
+  background-color: #f7fafc;
+  padding: 12px;
+  text-align: left;
+  font-weight: 700;
+  color: #2d3748;
+  border-bottom: 2px solid #e2e8f0;
+}
+
+.ratios-table tbody tr {
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.ratios-table tbody tr:hover {
+  background-color: #f7fafc;
+}
+
+.ratios-table td {
+  padding: 12px;
+}
+
+.ratios-table td.ratio-value {
+  text-align: right;
+  font-family: 'Courier New', monospace;
+  font-weight: 600;
+}
+
+/* Consistency */
+.consistency-status {
+  margin-bottom: 16px;
+}
+
+.consistency-badge {
+  display: inline-block;
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.consistency-badge.success {
+  background-color: #c6f6d5;
+  color: #22543d;
+}
+
+.consistency-badge.error {
+  background-color: #fed7d7;
+  color: #742a2a;
+}
+
+.consistency-messages {
+  margin-top: 16px;
+  padding: 16px;
+  border-radius: 8px;
+}
+
+.consistency-messages.errors {
+  background-color: #fff5f5;
+  border-left: 4px solid #e53e3e;
+}
+
+.consistency-messages.warnings {
+  background-color: #fffaf0;
+  border-left: 4px solid #ed8936;
+}
+
+.consistency-messages h4 {
+  margin: 0 0 12px 0;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.consistency-messages.errors h4 {
+  color: #c53030;
+}
+
+.consistency-messages.warnings h4 {
+  color: #c05621;
+}
+
+.consistency-messages ul {
+  margin: 0;
+  padding-left: 20px;
+}
+
+.consistency-messages li {
+  margin-bottom: 8px;
+  color: #2d3748;
+  font-size: 13px;
+}
+
+.no-issues {
+  color: #2f855a;
+  font-weight: 600;
+  font-size: 14px;
+}
+
+/* Empty State */
+.tofe-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 80px 24px;
+  text-align: center;
+  background-color: #ffffff;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.tofe-empty-state svg {
+  color: #cbd5e0;
+  margin-bottom: 16px;
+}
+
+.tofe-empty-state h3 {
+  margin: 0 0 8px 0;
+  font-size: 20px;
+  font-weight: 700;
+  color: #2d3748;
+}
+
+.tofe-empty-state p {
+  margin: 0;
+  font-size: 14px;
+  color: #718096;
+  max-width: 400px;
+}
+
+/* Loading & Error */
+.loading-container,
+.error-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 80px 24px;
+  text-align: center;
+}
+
+.spinner {
+  width: 48px;
+  height: 48px;
+  border: 4px solid #e2e8f0;
+  border-top-color: #2563eb;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .tofe-view-page {
+    padding: 16px;
+  }
+
+  .tofe-header-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .tofe-header-actions button,
+  .tofe-header-actions a {
+    width: 100%;
+  }
+
+  .balance-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .tofe-table {
+    font-size: 11px;
+  }
+
+  .tofe-table thead th,
+  .tofe-table td {
+    padding: 8px 4px;
+  }
+}

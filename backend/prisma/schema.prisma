@@ -1,0 +1,1698 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id              String            @id @default(uuid())
+  email           String            @unique
+  password        String
+  firstName       String
+  lastName        String
+  phone           String?
+  isActive        Boolean           @default(true)
+  roleId          String
+  ministryId      String?
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+  lastLogin       DateTime?
+  auditLogs       AuditLog[]
+  comments        Comment[]
+  notifications   Notification[]
+  workflowActions WorkflowHistory[]
+  ministry        Ministry?         @relation(fields: [ministryId], references: [id])
+  role            Role              @relation(fields: [roleId], references: [id])
+  settings        UserSettings?
+
+  @@map("users")
+}
+
+model UserSettings {
+  userId        String   @id
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  language      String   @default("fr")
+  theme         String   @default("light")
+  notifications Json     @default("{\"email\":true,\"push\":true,\"sms\":false,\"weeklyReport\":true,\"monthlyReport\":true}")
+  accessibility Json     @default("{\"largeText\":false,\"highContrast\":false,\"screenReader\":false}")
+  privacy       Json     @default("{\"showEmail\":false,\"showPhone\":false,\"showOnlineStatus\":true}")
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@map("user_settings")
+}
+
+model AppSettings {
+  key         String   @id
+  value       Json
+  category    String
+  description String?
+  updatedBy   String?
+  updatedAt   DateTime @updatedAt
+  createdAt   DateTime @default(now())
+
+  @@index([category])
+  @@map("app_settings")
+}
+
+model Role {
+  id          String           @id @default(uuid())
+  code        String           @unique
+  name        String
+  description String?
+  isActive    Boolean          @default(true)
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+  permissions RolePermission[]
+  users       User[]
+
+  @@map("roles")
+}
+
+model Permission {
+  id          String           @id @default(uuid())
+  code        String           @unique
+  name        String
+  description String?
+  module      String
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+  roles       RolePermission[]
+
+  @@map("permissions")
+}
+
+model RolePermission {
+  id           String     @id @default(uuid())
+  roleId       String
+  permissionId String
+  canCreate    Boolean    @default(false)
+  canRead      Boolean    @default(false)
+  canUpdate    Boolean    @default(false)
+  canDelete    Boolean    @default(false)
+  canValidate  Boolean    @default(false)
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+  permission   Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+  role         Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+
+  @@unique([roleId, permissionId])
+  @@map("role_permissions")
+}
+
+model AuditLog {
+  id        String   @id @default(uuid())
+  userId    String
+  action    String
+  entity    String
+  entityId  String?
+  oldValue  Json?
+  newValue  Json?
+  ipAddress String?
+  userAgent String?
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([entity, entityId])
+  @@index([createdAt])
+  @@map("audit_logs")
+}
+
+model Ministry {
+  id                  String                 @id @default(uuid())
+  code                String                 @unique
+  name                String
+  nameAr              String?
+  nameEn              String?
+  description         String?
+  isPriority          Boolean                @default(false)
+  isActive            Boolean                @default(true)
+  createdAt           DateTime               @default(now())
+  updatedAt           DateTime               @updatedAt
+  baselineBudgets     BaselineBudget[]
+  cdmtSectoralDocs    CdmtSectoralDocument[]
+  expenseProjections  ExpenseProjection[]
+  ministerialCeilings MinisterialCeiling[]
+  programs            Program[]
+  users               User[]
+  historicalBudgets   HistoricalBudget[]
+  trendProjections    TrendProjection[]
+  policyMeasures      PolicyMeasure[]
+  marginAllocations   MarginAllocation[]
+  pieProjects         PIEProject[] // SECTORAL: Exceptional investment projects
+  pipProjects         PIPProject[] // SECTORAL: Public investment projects
+  sectoralMeasures    SectoralMeasure[] // SPRINT 5.3: Sectoral new measures
+  actionPlans         ActionPlan[] // SPRINT 5.3: Action plans
+
+  @@map("ministries")
+}
+
+model Program {
+  id                String             @id @default(uuid())
+  code              String             @unique
+  name              String
+  nameAr            String?
+  nameEn            String?
+  description       String?
+  objective         String?
+  ministryId        String
+  isActive          Boolean            @default(true)
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+  actions           Action[]
+  objectives        Objective[]
+  ministry          Ministry           @relation(fields: [ministryId], references: [id])
+  historicalBudgets HistoricalBudget[]
+  trendProjections  TrendProjection[]
+  pieProjects       PIEProject[] // SECTORAL: Exceptional investment projects
+  pipProjects       PIPProject[] // SECTORAL: Public investment projects
+  sectoralMeasures  SectoralMeasure[] // SPRINT 5.3: Sectoral new measures
+
+  @@map("programs")
+}
+
+model Action {
+  id                String             @id @default(uuid())
+  code              String             @unique
+  name              String
+  nameAr            String?
+  nameEn            String?
+  description       String?
+  programId         String
+  isActive          Boolean            @default(true)
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+  program           Program            @relation(fields: [programId], references: [id])
+  activities        Activity[]
+  objectives        Objective[]
+  historicalBudgets HistoricalBudget[] // SECTORAL: Historical budgets at action level
+  trendProjections  TrendProjection[] // SECTORAL: Trend projections at action level
+  pieProjects       PIEProject[] // SECTORAL: Exceptional investment projects
+  pipProjects       PIPProject[] // SECTORAL: Public investment projects
+  sectoralMeasures  SectoralMeasure[] // SPRINT 5.3: Sectoral new measures
+
+  @@map("actions")
+}
+
+model Activity {
+  id                String             @id @default(uuid())
+  code              String             @unique
+  name              String
+  nameAr            String?
+  nameEn            String?
+  description       String?
+  actionId          String
+  isActive          Boolean            @default(true)
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+  action            Action             @relation(fields: [actionId], references: [id])
+  objectives        Objective[]
+  historicalBudgets HistoricalBudget[] // SECTORAL: Historical budgets at activity level
+  trendProjections  TrendProjection[] // SECTORAL: Trend projections at activity level
+  pieProjects       PIEProject[] // SECTORAL: Exceptional investment projects
+  pipProjects       PIPProject[] // SECTORAL: Public investment projects
+  sectoralMeasures  SectoralMeasure[] // SPRINT 5.3: Sectoral new measures
+
+  @@map("activities")
+}
+
+// ============================================
+// PROGRAMMATIC STRUCTURE (Objectives & Indicators)
+// ============================================
+
+model Objective {
+  id          String  @id @default(uuid())
+  code        String  @unique
+  name        String
+  nameAr      String?
+  nameEn      String?
+  description String?
+
+  // Polymorphic relationship - can belong to Program, Action, or Activity
+  entityType String // "PROGRAM", "ACTION", "ACTIVITY"
+  programId  String?
+  actionId   String?
+  activityId String?
+
+  // Classification
+  objectiveType String? // "STRATEGIC", "OPERATIONAL", "SPECIFIC"
+  priority      Int? // 1 (highest) to 5 (lowest)
+
+  // Status
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  program    Program?    @relation(fields: [programId], references: [id], onDelete: Cascade)
+  action     Action?     @relation(fields: [actionId], references: [id], onDelete: Cascade)
+  activity   Activity?   @relation(fields: [activityId], references: [id], onDelete: Cascade)
+  indicators Indicator[]
+
+  @@index([entityType])
+  @@index([programId])
+  @@index([actionId])
+  @@index([activityId])
+  @@map("objectives")
+}
+
+model Indicator {
+  id          String  @id @default(uuid())
+  code        String  @unique
+  name        String
+  nameAr      String?
+  nameEn      String?
+  description String?
+  objectiveId String
+
+  // Measurement details
+  unit              String // "Percentage", "Number", "Days", "Amount", etc.
+  measurementMethod String? // How the indicator is measured
+  dataSource        String? // Where the data comes from
+
+  // Baseline (reference year)
+  baselineYear  Int?
+  baselineValue Decimal? @db.Decimal(15, 2)
+
+  // Multi-year targets (N+1, N+2, N+3)
+  targetYear1  Int?
+  targetValue1 Decimal? @db.Decimal(15, 2)
+
+  targetYear2  Int?
+  targetValue2 Decimal? @db.Decimal(15, 2)
+
+  targetYear3  Int?
+  targetValue3 Decimal? @db.Decimal(15, 2)
+
+  // Actual values (for tracking)
+  actualYear1  Int?
+  actualValue1 Decimal? @db.Decimal(15, 2)
+
+  actualYear2  Int?
+  actualValue2 Decimal? @db.Decimal(15, 2)
+
+  actualYear3  Int?
+  actualValue3 Decimal? @db.Decimal(15, 2)
+
+  // Classification
+  indicatorType String? // "OUTPUT", "OUTCOME", "IMPACT"
+  frequency     String? // "ANNUAL", "QUARTERLY", "MONTHLY"
+
+  // Responsible entity
+  responsibleEntity String?
+
+  // Status
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  objective Objective @relation(fields: [objectiveId], references: [id], onDelete: Cascade)
+
+  @@index([objectiveId])
+  @@index([indicatorType])
+  @@map("indicators")
+}
+
+model EconomicCategory {
+  id          String             @id @default(uuid())
+  code        String             @unique
+  name        String
+  nameAr      String?
+  nameEn      String?
+  description String?
+  level       Int
+  parentId    String?
+  isActive    Boolean            @default(true)
+  createdAt   DateTime           @default(now())
+  updatedAt   DateTime           @updatedAt
+  parent      EconomicCategory?  @relation("EconomicCategoryHierarchy", fields: [parentId], references: [id])
+  children    EconomicCategory[] @relation("EconomicCategoryHierarchy")
+
+  @@map("economic_categories")
+}
+
+model FinancingSource {
+  id          String   @id @default(uuid())
+  code        String   @unique
+  name        String
+  nameAr      String?
+  nameEn      String?
+  description String?
+  type        String
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("financing_sources")
+}
+
+model FunctionalClassification {
+  id          String                     @id @default(uuid())
+  code        String                     @unique
+  name        String
+  nameAr      String?
+  nameEn      String?
+  description String?
+  level       Int
+  parentId    String?
+  isActive    Boolean                    @default(true)
+  createdAt   DateTime                   @default(now())
+  updatedAt   DateTime                   @updatedAt
+  parent      FunctionalClassification?  @relation("FunctionalHierarchy", fields: [parentId], references: [id])
+  children    FunctionalClassification[] @relation("FunctionalHierarchy")
+
+  @@map("functional_classifications")
+}
+
+model BudgetYear {
+  id        String   @id @default(uuid())
+  year      Int      @unique
+  label     String
+  startDate DateTime
+  endDate   DateTime
+  isCurrent Boolean  @default(false)
+  status    String   @default("DRAFT")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("budget_years")
+}
+
+model Notification {
+  id        String    @id @default(uuid())
+  userId    String
+  title     String
+  message   String
+  type      String
+  isRead    Boolean   @default(false)
+  link      String?
+  createdAt DateTime  @default(now())
+  readAt    DateTime?
+  user      User      @relation(fields: [userId], references: [id])
+
+  @@index([userId, isRead])
+  @@map("notifications")
+}
+
+model WorkflowState {
+  id          String   @id @default(uuid())
+  code        String   @unique
+  name        String
+  description String?
+  order       Int
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("workflow_states")
+}
+
+model Comment {
+  id String @id @default(uuid())
+
+  // Polymorphic document reference
+  documentType String // "SECTORAL_MEASURE", "ACTION_PLAN", "MACRO_FRAMEWORK", etc.
+  documentId   String
+
+  // Comment content
+  content     String
+  commentType String @default("GENERAL") // "GENERAL", "REVIEW", "APPROVAL", "REJECTION", "QUESTION"
+
+  // Threading support
+  parentId String?
+
+  // Metadata
+  createdBy  String
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  isEdited   Boolean   @default(false)
+  isResolved Boolean   @default(false)
+  resolvedBy String?
+  resolvedAt DateTime?
+
+  // Visibility
+  isInternal Boolean @default(false) // Internal comments visible only to reviewers
+
+  // Relations
+  author  User      @relation(fields: [createdBy], references: [id])
+  parent  Comment?  @relation("CommentThread", fields: [parentId], references: [id], onDelete: Cascade)
+  replies Comment[] @relation("CommentThread")
+
+  @@index([documentType, documentId])
+  @@index([createdBy])
+  @@index([parentId])
+  @@map("comments")
+}
+
+model MacroFramework {
+  id            String   @id @default(uuid())
+  year          Int
+  budgetYear    Int
+  gdpGrowthRate Decimal  @db.Decimal(5, 2)
+  inflationRate Decimal  @db.Decimal(5, 2)
+  exchangeRate  Decimal? @db.Decimal(10, 4)
+
+  // Taux de croissance sectoriels
+  agricultureGrowthRate Decimal @default(0) @db.Decimal(5, 2)
+  industryGrowthRate    Decimal @default(0) @db.Decimal(5, 2)
+  servicesGrowthRate    Decimal @default(0) @db.Decimal(5, 2)
+
+  // Prix des matières premières (REQ-MAC-01)
+  oilPrice              Decimal? @db.Decimal(10, 2) // Prix du baril de pétrole (USD)
+  oilPriceYear1         Decimal? @db.Decimal(10, 2)
+  oilPriceYear2         Decimal? @db.Decimal(10, 2)
+  oilPriceYear3         Decimal? @db.Decimal(10, 2)
+  goldPrice             Decimal? @db.Decimal(10, 2) // Prix de l'or (USD/once)
+  goldPriceYear1        Decimal? @db.Decimal(10, 2)
+  goldPriceYear2        Decimal? @db.Decimal(10, 2)
+  goldPriceYear3        Decimal? @db.Decimal(10, 2)
+  foodPriceIndex        Decimal? @db.Decimal(6, 2) // Indice des prix alimentaires (base 100)
+  foodPriceIndexYear1   Decimal? @db.Decimal(6, 2)
+  foodPriceIndexYear2   Decimal? @db.Decimal(6, 2)
+  foodPriceIndexYear3   Decimal? @db.Decimal(6, 2)
+
+  // PIB nominal pour les ratios (en millions de DJF)
+  nominalGDP            Decimal? @db.Decimal(18, 2) // PIB nominal année de base
+  nominalGDPYear1       Decimal? @db.Decimal(18, 2) // PIB nominal N+1
+  nominalGDPYear2       Decimal? @db.Decimal(18, 2) // PIB nominal N+2
+  nominalGDPYear3       Decimal? @db.Decimal(18, 2) // PIB nominal N+3
+
+  // Taux d'intérêt de référence
+  interestRate          Decimal? @db.Decimal(5, 2) // Taux d'intérêt moyen sur la dette
+
+  // Enhanced workflow fields (5-level workflow)
+  status          String    @default("DRAFT") // DRAFT, SUBMITTED, UNDER_REVIEW, VALIDATED, APPROVED, REJECTED
+  workflowStage   String? // Current validation stage/role
+  submittedAt     DateTime?
+  submittedBy     String?
+  reviewStartedAt DateTime?
+  reviewStartedBy String?
+  validatedAt     DateTime?
+  validatedBy     String?
+  approvedAt      DateTime?
+  approvedBy      String?
+  rejectedAt      DateTime?
+  rejectedBy      String?
+  rejectionReason String?
+  createdBy       String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  revenueProjections  RevenueProjection[]
+  expenseProjections  ExpenseProjection[]
+  tofeDocuments       TOFEDocument[]
+  cbmtDocuments       CBMTDocument[]
+  cdmtGlobalScenarios CDMTGlobalScenario[]
+
+  @@unique([year, budgetYear])
+  @@map("macro_frameworks")
+}
+
+model RevenueProjection {
+  id               String @id @default(uuid())
+  macroFrameworkId String
+  revenueType      String // TAX, NON_TAX, GRANTS, OTHER
+  categoryCode     String
+  categoryName     String
+
+  baseYear   Int
+  baseAmount Decimal @db.Decimal(15, 2)
+
+  projectionYear1   Int
+  projectedAmount1  Decimal  @db.Decimal(15, 2)
+  growthRate1       Decimal? @db.Decimal(5, 2)
+  adjustmentFactor1 Decimal? @db.Decimal(5, 2)
+
+  projectionYear2   Int
+  projectedAmount2  Decimal  @db.Decimal(15, 2)
+  growthRate2       Decimal? @db.Decimal(5, 2)
+  adjustmentFactor2 Decimal? @db.Decimal(5, 2)
+
+  projectionYear3   Int?
+  projectedAmount3  Decimal? @db.Decimal(15, 2)
+  growthRate3       Decimal? @db.Decimal(5, 2)
+  adjustmentFactor3 Decimal? @db.Decimal(5, 2)
+
+  calculationMethod String   @default("AUTO")
+  notes             String?
+  isActive          Boolean  @default(true)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  macroFramework MacroFramework @relation(fields: [macroFrameworkId], references: [id], onDelete: Cascade)
+
+  @@unique([macroFrameworkId, categoryCode])
+  @@index([macroFrameworkId])
+  @@map("revenue_projections")
+}
+
+model ExpenseProjection {
+  id               String  @id @default(uuid())
+  macroFrameworkId String
+  expenseType      String // PERSONNEL, GOODS_SERVICES, INVESTMENT, DEBT_SERVICE, DEBT_INTEREST, TRANSFERS, SUBSIDIES, OTHER
+  categoryCode     String
+  isInterest       Boolean @default(false) // true si c'est une charge d'intérêt (pour calcul solde primaire)
+  categoryName     String
+  ministryId       String?
+
+  baseYear   Int
+  baseAmount Decimal @db.Decimal(15, 2)
+
+  projectionYear1   Int
+  projectedAmount1  Decimal  @db.Decimal(15, 2)
+  growthRate1       Decimal? @db.Decimal(5, 2)
+  adjustmentFactor1 Decimal? @db.Decimal(5, 2)
+
+  projectionYear2   Int
+  projectedAmount2  Decimal  @db.Decimal(15, 2)
+  growthRate2       Decimal? @db.Decimal(5, 2)
+  adjustmentFactor2 Decimal? @db.Decimal(5, 2)
+
+  projectionYear3   Int?
+  projectedAmount3  Decimal? @db.Decimal(15, 2)
+  growthRate3       Decimal? @db.Decimal(5, 2)
+  adjustmentFactor3 Decimal? @db.Decimal(5, 2)
+
+  calculationMethod String   @default("AUTO")
+  notes             String?
+  isActive          Boolean  @default(true)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  macroFramework MacroFramework @relation(fields: [macroFrameworkId], references: [id], onDelete: Cascade)
+  ministry       Ministry?      @relation(fields: [ministryId], references: [id])
+
+  @@unique([macroFrameworkId, categoryCode, ministryId])
+  @@index([macroFrameworkId])
+  @@index([ministryId])
+  @@map("expense_projections")
+}
+
+model BaselineBudget {
+  id         String   @id @default(uuid())
+  ministryId String
+  budgetYear Int
+  year       Int
+  amount     Decimal  @db.Decimal(15, 2)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  ministry   Ministry @relation(fields: [ministryId], references: [id])
+
+  @@unique([ministryId, budgetYear, year])
+  @@map("baseline_budgets")
+}
+
+model MinisterialCeiling {
+  id             String    @id @default(uuid())
+  scenarioId     String?
+  ministryId     String
+  budgetYear     Int
+  year           Int
+  baseline       Decimal   @db.Decimal(15, 2)
+  newMeasures    Decimal   @default(0) @db.Decimal(15, 2)
+  allocatedSpace Decimal   @default(0) @db.Decimal(15, 2)
+  ceiling        Decimal   @db.Decimal(15, 2)
+  calculatedAt   DateTime?
+  notes          String?
+
+  // Enhanced workflow fields (5-level workflow)
+  status          String    @default("DRAFT") // DRAFT, SUBMITTED, UNDER_REVIEW, VALIDATED, APPROVED, REJECTED
+  workflowStage   String? // Current validation stage/role
+  submittedAt     DateTime?
+  submittedBy     String?
+  reviewStartedAt DateTime?
+  reviewStartedBy String?
+  validatedAt     DateTime?
+  validatedBy     String?
+  approvedAt      DateTime?
+  approvedBy      String?
+  rejectedAt      DateTime?
+  rejectedBy      String?
+  rejectionReason String?
+  createdBy       String?
+
+  createdAt DateTime            @default(now())
+  updatedAt DateTime            @updatedAt
+  scenario  CDMTGlobalScenario? @relation(fields: [scenarioId], references: [id], onDelete: Cascade)
+  ministry  Ministry            @relation(fields: [ministryId], references: [id])
+
+  @@unique([scenarioId, ministryId, budgetYear, year])
+  @@index([scenarioId])
+  @@index([ministryId])
+  @@map("ministerial_ceilings")
+}
+
+model CdmtSectoralDocument {
+  id          String    @id @default(uuid())
+  ministryId  String
+  budgetYear  Int
+  version     Int       @default(1)
+  status      String    @default("DRAFT")
+  submittedAt DateTime?
+  validatedAt DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  ministry    Ministry  @relation(fields: [ministryId], references: [id])
+
+  @@unique([ministryId, budgetYear, version])
+  @@map("cdmt_sectoral_documents")
+}
+
+model DocumentVersion {
+  id            String   @id @default(uuid())
+  documentType  String
+  documentId    String
+  versionNumber Int
+  description   String?
+  createdBy     String
+  data          Json
+  createdAt     DateTime @default(now())
+
+  @@unique([documentType, documentId, versionNumber])
+  @@index([documentType, documentId])
+  @@map("document_versions")
+}
+
+model StrategicAxis {
+  id          String   @id @default(uuid())
+  code        String   @unique
+  name        String
+  description String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("strategic_axes")
+}
+
+model EconomicNature {
+  id                String             @id @default(uuid())
+  code              String             @unique
+  name              String
+  type              String
+  description       String?
+  isActive          Boolean            @default(true)
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+  historicalBudgets HistoricalBudget[]
+  trendProjections  TrendProjection[]
+  sectoralMeasures  SectoralMeasure[] // SPRINT 5.3: Sectoral new measures
+
+  @@map("economic_natures")
+}
+
+model FundingSource {
+  id                String             @id @default(uuid())
+  code              String             @unique
+  name              String
+  type              String
+  description       String?
+  isActive          Boolean            @default(true)
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+  historicalBudgets HistoricalBudget[]
+  trendProjections  TrendProjection[]
+  pipProjects       PIPProject[] // SECTORAL: Public investment projects
+  sectoralMeasures  SectoralMeasure[] // SPRINT 5.3: Sectoral new measures
+
+  @@map("funding_sources")
+}
+
+model FiscalYear {
+  id        String   @id @default(uuid())
+  year      Int      @unique
+  name      String
+  startDate DateTime
+  endDate   DateTime
+  isClosed  Boolean  @default(false)
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("fiscal_years")
+}
+
+// ============================================
+// TOFE (Tableau des Opérations Financières de l'État) - GFS 2014
+// ============================================
+
+model TOFEDocument {
+  id               String  @id @default(uuid())
+  macroFrameworkId String
+  fiscalYear       Int
+  documentCode     String // e.g., "TOFE-2026"
+  title            String // e.g., "TOFE Prévisionnel 2026-2028"
+  description      String?
+
+  // Enhanced workflow fields (5-level workflow)
+  status          String    @default("DRAFT") // DRAFT, SUBMITTED, UNDER_REVIEW, VALIDATED, APPROVED, REJECTED
+  workflowStage   String? // Current validation stage/role
+  generatedAt     DateTime  @default(now())
+  submittedAt     DateTime?
+  submittedBy     String?
+  reviewStartedAt DateTime?
+  reviewStartedBy String?
+  validatedAt     DateTime?
+  validatedBy     String?
+  approvedAt      DateTime?
+  approvedBy      String?
+  rejectedAt      DateTime?
+  rejectedBy      String?
+  rejectionReason String?
+  createdBy       String?
+
+  // Metadata
+  currency String  @default("DJF")
+  unit     String  @default("MILLION") // UNIT, THOUSAND, MILLION, BILLION
+  notes    String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  macroFramework MacroFramework @relation(fields: [macroFrameworkId], references: [id], onDelete: Cascade)
+  lines          TOFELine[]
+
+  @@unique([macroFrameworkId, fiscalYear])
+  @@index([macroFrameworkId])
+  @@index([fiscalYear])
+  @@map("tofe_documents")
+}
+
+model TOFELine {
+  id             String @id @default(uuid())
+  tofeDocumentId String
+
+  // Structure hiérarchique
+  section      String // REVENUE, EXPENSE, BALANCE, FINANCING
+  lineCode     String // e.g., "1", "1.1", "1.1.1"
+  lineLabel    String // e.g., "Recettes totales", "Recettes fiscales"
+  lineLevel    Int     @default(0) // 0=section, 1=major category, 2=sub-category, etc.
+  parentLineId String?
+  orderIndex   Int // Pour le tri
+
+  // Montants (en millions de DJF par défaut)
+  baseYear   Int
+  baseAmount Decimal @default(0) @db.Decimal(15, 2)
+
+  projectionYear1 Int
+  amount1         Decimal @default(0) @db.Decimal(15, 2)
+
+  projectionYear2 Int
+  amount2         Decimal @default(0) @db.Decimal(15, 2)
+
+  projectionYear3 Int?
+  amount3         Decimal? @db.Decimal(15, 2)
+
+  // Métadonnées
+  isCalculated Boolean @default(false) // true si c'est un total calculé
+  isBold       Boolean @default(false) // pour la mise en forme
+  accountCode  String? // Code du plan comptable si applicable
+  gfsCode      String? // Code GFS 2014
+  formula      String? // Formule de calcul si applicable
+  notes        String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  tofeDocument TOFEDocument @relation(fields: [tofeDocumentId], references: [id], onDelete: Cascade)
+  parentLine   TOFELine?    @relation("TOFELineHierarchy", fields: [parentLineId], references: [id], onDelete: Restrict)
+  childLines   TOFELine[]   @relation("TOFELineHierarchy")
+
+  @@unique([tofeDocumentId, lineCode])
+  @@index([tofeDocumentId])
+  @@index([section])
+  @@index([parentLineId])
+  @@index([tofeDocumentId, orderIndex]) // For efficient sorting
+  @@map("tofe_lines")
+}
+
+// ============================================
+// CBMT (Cadre Budgétaire à Moyen Terme)
+// ============================================
+
+model CBMTDocument {
+  id               String  @id @default(uuid())
+  macroFrameworkId String
+  fiscalYear       Int
+  documentCode     String // e.g., "CBMT-2026"
+  title            String // e.g., "CBMT 2026-2028"
+  description      String?
+
+  // Scénarios multiples (BASE, OPTIMISTIC, PESSIMISTIC, REALISTIC, CUSTOM)
+  scenarioName String @default("Scénario de base")
+  scenarioType String @default("BASE") // BASE, OPTIMISTIC, PESSIMISTIC, REALISTIC, CUSTOM
+  parentScenarioId String? // Référence au scénario de base pour les variantes
+
+  // Hypothèses de variation pour ce scénario
+  gdpGrowthVariation    Decimal? @db.Decimal(5, 2) // Variation du taux de croissance PIB
+  inflationVariation    Decimal? @db.Decimal(5, 2) // Variation du taux d'inflation
+  revenueAdjustment     Decimal? @db.Decimal(5, 2) // Ajustement des recettes (%)
+  expenseAdjustment     Decimal? @db.Decimal(5, 2) // Ajustement des dépenses (%)
+
+  // Plafonds globaux de dépenses (Global spending ceilings)
+  totalRevenueCeiling  Decimal  @db.Decimal(15, 2)
+  totalExpenseCeiling  Decimal  @db.Decimal(15, 2)
+  fiscalDeficitCeiling Decimal? @db.Decimal(15, 2)
+  debtCeiling          Decimal? @db.Decimal(15, 2)
+
+  // Enhanced workflow fields (5-level workflow)
+  status          String    @default("DRAFT") // DRAFT, SUBMITTED, UNDER_REVIEW, VALIDATED, APPROVED, REJECTED
+  workflowStage   String? // Current validation stage/role
+  generatedAt     DateTime  @default(now())
+  submittedAt     DateTime?
+  submittedBy     String?
+  reviewStartedAt DateTime?
+  reviewStartedBy String?
+  validatedAt     DateTime?
+  validatedBy     String?
+  approvedAt      DateTime?
+  approvedBy      String?
+  rejectedAt      DateTime?
+  rejectedBy      String?
+  rejectionReason String?
+  createdBy       String?
+
+  // Metadata
+  currency String  @default("DJF")
+  unit     String  @default("MILLION") // UNIT, THOUSAND, MILLION, BILLION
+  notes    String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  macroFramework MacroFramework  @relation(fields: [macroFrameworkId], references: [id], onDelete: Cascade)
+  aggregates     CBMTAggregate[]
+  reserves       CBMTReserve[]
+  analyses       CBMTAnalysis[]
+
+  @@unique([macroFrameworkId, fiscalYear, scenarioType])
+  @@index([macroFrameworkId])
+  @@index([fiscalYear])
+  @@index([scenarioType])
+  @@map("cbmt_documents")
+}
+
+model CBMTAggregate {
+  id             String @id @default(uuid())
+  cbmtDocumentId String
+
+  // Type and classification
+  aggregateType    String // REVENUE, EXPENSE
+  economicNatureId String? // Link to EconomicNature (par nature économique)
+  categoryCode     String
+  categoryName     String
+
+  // Montants par année (3-year projections: N+1, N+2, N+3)
+  baseYear   Int
+  baseAmount Decimal @default(0) @db.Decimal(15, 2)
+
+  year1    Int
+  amount1  Decimal  @default(0) @db.Decimal(15, 2)
+  ceiling1 Decimal? @db.Decimal(15, 2)
+  gap1     Decimal? @db.Decimal(15, 2) // Écart vs plafond
+
+  year2    Int
+  amount2  Decimal  @default(0) @db.Decimal(15, 2)
+  ceiling2 Decimal? @db.Decimal(15, 2)
+  gap2     Decimal? @db.Decimal(15, 2)
+
+  year3    Int
+  amount3  Decimal  @default(0) @db.Decimal(15, 2)
+  ceiling3 Decimal? @db.Decimal(15, 2)
+  gap3     Decimal? @db.Decimal(15, 2)
+
+  // Calculation metadata
+  calculationMethod String  @default("AUTO") // AUTO, MANUAL, HYBRID
+  isAlertTriggered  Boolean @default(false) // Dépassement détecté
+  alertMessage      String?
+  notes             String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  cbmtDocument CBMTDocument @relation(fields: [cbmtDocumentId], references: [id], onDelete: Cascade)
+
+  @@unique([cbmtDocumentId, aggregateType, categoryCode])
+  @@index([cbmtDocumentId])
+  @@index([economicNatureId])
+  @@map("cbmt_aggregates")
+}
+
+model CBMTReserve {
+  id             String @id @default(uuid())
+  cbmtDocumentId String
+
+  // Reserve details
+  reserveType String // CONTINGENCY (Précaution/Imprévus), ARBITRAGE (Ajustements), OTHER
+  name        String
+  description String?
+
+  // Paramètres de calcul
+  calculationRate Decimal? @db.Decimal(5, 2) // Taux de calcul (ex: 2% des dépenses)
+  baseAmount      String?  // Base de calcul (TOTAL_EXPENSE, TOTAL_REVENUE, CUSTOM)
+
+  // Montants par année
+  year1      Int
+  amount1    Decimal @default(0) @db.Decimal(15, 2)
+  allocated1 Decimal @default(0) @db.Decimal(15, 2) // Montant alloué
+  available1 Decimal @default(0) @db.Decimal(15, 2) // Disponible
+
+  year2      Int
+  amount2    Decimal @default(0) @db.Decimal(15, 2)
+  allocated2 Decimal @default(0) @db.Decimal(15, 2)
+  available2 Decimal @default(0) @db.Decimal(15, 2)
+
+  year3      Int
+  amount3    Decimal @default(0) @db.Decimal(15, 2)
+  allocated3 Decimal @default(0) @db.Decimal(15, 2)
+  available3 Decimal @default(0) @db.Decimal(15, 2)
+
+  // Calculation
+  calculationBasis String? // e.g., "2% of total expenditure"
+  notes            String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  cbmtDocument CBMTDocument @relation(fields: [cbmtDocumentId], references: [id], onDelete: Cascade)
+
+  @@unique([cbmtDocumentId, reserveType, name])
+  @@index([cbmtDocumentId])
+  @@map("cbmt_reserves")
+}
+
+model CBMTAnalysis {
+  id             String @id @default(uuid())
+  cbmtDocumentId String
+
+  // Type d'analyse
+  analysisType String // SENSITIVITY, GAP, SHOCK, SUSTAINABILITY
+  analysisName String
+  description  String?
+
+  // Paramètres d'analyse
+  parameters Json? // Flexible JSON for analysis parameters
+
+  // Résultats d'analyse
+  results Json // Analysis results (structured data)
+
+  // Indicateurs clés
+  keyIndicators Json? // Key metrics from the analysis
+
+  // Conclusions et recommandations
+  conclusions     String?
+  recommendations String?
+  riskLevel       String? // LOW, MEDIUM, HIGH, CRITICAL
+
+  // Metadata
+  calculatedAt DateTime @default(now())
+  calculatedBy String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  cbmtDocument CBMTDocument @relation(fields: [cbmtDocumentId], references: [id], onDelete: Cascade)
+
+  @@index([cbmtDocumentId])
+  @@index([analysisType])
+  @@map("cbmt_analyses")
+}
+
+// ============================================
+// Budgets Tendanciels (Trend Budgets)
+// ============================================
+
+model TrendBudgetConfig {
+  id          String  @id @default(uuid())
+  configCode  String  @unique
+  name        String
+  description String?
+
+  // Période de référence
+  fiscalYear        Int // Année de projection
+  baselineStartYear Int // Début période historique
+  baselineEndYear   Int // Fin période historique
+
+  // Paramètres de calcul
+  globalGrowthRate Decimal @db.Decimal(5, 2)
+  projectionYears  Int     @default(3) // N+1, N+2, N+3
+
+  // Exclusions
+  excludeTemporary Boolean @default(true)
+
+  // Enhanced workflow fields (5-level workflow)
+  status          String    @default("DRAFT") // DRAFT, SUBMITTED, UNDER_REVIEW, VALIDATED, APPROVED, REJECTED
+  workflowStage   String? // Current validation stage/role
+  submittedAt     DateTime?
+  submittedBy     String?
+  reviewStartedAt DateTime?
+  reviewStartedBy String?
+  validatedAt     DateTime?
+  validatedBy     String?
+  approvedAt      DateTime?
+  approvedBy      String?
+  rejectedAt      DateTime?
+  rejectedBy      String?
+  rejectionReason String?
+  createdBy       String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  historicalBudgets   HistoricalBudget[]
+  trendProjections    TrendProjection[]
+  cdmtGlobalScenarios CDMTGlobalScenario[]
+
+  @@map("trend_budget_configs")
+}
+
+model HistoricalBudget {
+  id            String @id @default(uuid())
+  trendConfigId String
+
+  // Identification (hierarchy: ministry > program > action > activity)
+  ministryId       String
+  programId        String?
+  actionId         String? // SECTORAL LEVEL: Action
+  activityId       String? // SECTORAL LEVEL: Activity
+  economicNatureId String?
+  fundingSourceId  String?
+
+  // Données historiques
+  fiscalYear     Int
+  budgetAmount   Decimal  @db.Decimal(15, 2)
+  executedAmount Decimal? @db.Decimal(15, 2)
+
+  // Classification
+  isTemporary       Boolean @default(false)
+  isExceptional     Boolean @default(false) // SECTORAL: Pour exclusion des dépenses exceptionnelles
+  exceptionalReason String? // SECTORAL: Raison si exceptionnelle
+  notes             String?
+
+  // Métadonnées import
+  importSource String? // EXCEL, CSV, MANUAL
+  importedAt   DateTime?
+  importedBy   String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  trendConfig    TrendBudgetConfig @relation(fields: [trendConfigId], references: [id], onDelete: Cascade)
+  ministry       Ministry          @relation(fields: [ministryId], references: [id])
+  program        Program?          @relation(fields: [programId], references: [id])
+  action         Action?           @relation(fields: [actionId], references: [id])
+  activity       Activity?         @relation(fields: [activityId], references: [id])
+  economicNature EconomicNature?   @relation(fields: [economicNatureId], references: [id])
+  fundingSource  FundingSource?    @relation(fields: [fundingSourceId], references: [id])
+
+  @@unique([trendConfigId, ministryId, programId, actionId, activityId, economicNatureId, fundingSourceId, fiscalYear])
+  @@index([trendConfigId])
+  @@index([ministryId])
+  @@index([programId])
+  @@index([actionId])
+  @@index([activityId])
+  @@index([fiscalYear])
+  @@index([isExceptional])
+  @@index([ministryId, fiscalYear]) // Common filter combination for historical data queries
+  @@map("historical_budgets")
+}
+
+model TrendProjection {
+  id            String @id @default(uuid())
+  trendConfigId String
+
+  // Identification (hierarchy: ministry > program > action > activity)
+  ministryId       String
+  programId        String?
+  actionId         String? // SECTORAL LEVEL: Action
+  activityId       String? // SECTORAL LEVEL: Activity
+  economicNatureId String?
+  fundingSourceId  String?
+
+  // Calculs de base
+  baseAmount          Decimal @db.Decimal(15, 2)
+  historicalYearsUsed Int[] // Années incluses dans le calcul
+  temporaryExcluded   Boolean @default(false)
+  exceptionalExcluded Boolean @default(false) // SECTORAL: Exclusion des dépenses exceptionnelles
+
+  // Projections
+  projectionYear1  Int
+  projectedAmount1 Decimal @db.Decimal(15, 2)
+  growthRate1      Decimal @db.Decimal(5, 2)
+
+  projectionYear2  Int
+  projectedAmount2 Decimal @db.Decimal(15, 2)
+  growthRate2      Decimal @db.Decimal(5, 2)
+
+  projectionYear3  Int
+  projectedAmount3 Decimal @db.Decimal(15, 2)
+  growthRate3      Decimal @db.Decimal(5, 2)
+
+  // SECTORAL: Contraintes de plafonds (lien avec CDMT Global)
+  ceilingY1      Decimal? @db.Decimal(15, 2) // Plafond ministériel N+1
+  ceilingY2      Decimal? @db.Decimal(15, 2) // Plafond ministériel N+2
+  ceilingY3      Decimal? @db.Decimal(15, 2) // Plafond ministériel N+3
+  exceedsCeiling Boolean  @default(false) // Indicateur de dépassement
+
+  // Classification
+  isPriorityMinistry Boolean @default(false)
+
+  // Métadonnées
+  calculationMethod String    @default("AUTO") // AUTO, MANUAL, HYBRID
+  lastCalculatedAt  DateTime?
+  notes             String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  trendConfig    TrendBudgetConfig @relation(fields: [trendConfigId], references: [id], onDelete: Cascade)
+  ministry       Ministry          @relation(fields: [ministryId], references: [id])
+  program        Program?          @relation(fields: [programId], references: [id])
+  action         Action?           @relation(fields: [actionId], references: [id])
+  activity       Activity?         @relation(fields: [activityId], references: [id])
+  economicNature EconomicNature?   @relation(fields: [economicNatureId], references: [id])
+  fundingSource  FundingSource?    @relation(fields: [fundingSourceId], references: [id])
+
+  @@unique([trendConfigId, ministryId, programId, actionId, activityId, economicNatureId, fundingSourceId])
+  @@index([trendConfigId])
+  @@index([ministryId])
+  @@index([programId])
+  @@index([actionId])
+  @@index([activityId])
+  @@index([exceedsCeiling])
+  @@map("trend_projections")
+}
+
+// ============================================
+// SECTORAL TRENDS: PIE/PIP & EXCEPTIONAL EXPENSES
+// ============================================
+
+// PIE: Plan d'Investissement Exceptionnel (Exceptional Investment Plan)
+model PIEProject {
+  id          String  @id @default(uuid())
+  projectCode String  @unique
+  name        String
+  description String?
+
+  // Identification sectorielle
+  ministryId String
+  programId  String?
+  actionId   String?
+  activityId String?
+
+  // Financement
+  totalAmount Decimal @db.Decimal(15, 2)
+
+  // Répartition multi-années
+  amountY1 Decimal @default(0) @db.Decimal(15, 2)
+  amountY2 Decimal @default(0) @db.Decimal(15, 2)
+  amountY3 Decimal @default(0) @db.Decimal(15, 2)
+
+  // Catégorisation
+  category      String? // INFRASTRUCTURE, EQUIPMENT, etc.
+  priority      Int? // 1-10
+  isExceptional Boolean @default(true) // Par défaut PIE = exceptionnel
+
+  // Workflow
+  status    String @default("PLANNED") // PLANNED, ONGOING, COMPLETED, CANCELLED
+  startYear Int?
+  endYear   Int?
+
+  createdBy String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  ministry Ministry  @relation(fields: [ministryId], references: [id])
+  program  Program?  @relation(fields: [programId], references: [id])
+  action   Action?   @relation(fields: [actionId], references: [id])
+  activity Activity? @relation(fields: [activityId], references: [id])
+
+  @@index([ministryId])
+  @@index([programId])
+  @@index([actionId])
+  @@index([status])
+  @@map("pie_projects")
+}
+
+// PIP: Programme d'Investissement Public (Public Investment Program)
+model PIPProject {
+  id          String  @id @default(uuid())
+  projectCode String  @unique
+  name        String
+  description String?
+
+  // Identification sectorielle
+  ministryId String
+  programId  String?
+  actionId   String?
+  activityId String?
+
+  // Financement
+  totalAmount Decimal @db.Decimal(15, 2)
+
+  // Répartition multi-années
+  amountY1 Decimal @default(0) @db.Decimal(15, 2)
+  amountY2 Decimal @default(0) @db.Decimal(15, 2)
+  amountY3 Decimal @default(0) @db.Decimal(15, 2)
+
+  // Sources de financement
+  fundingSourceId String?
+  externalDonor   String? // Bailleur de fonds externe
+
+  // Catégorisation
+  projectType String? // ROADS, HEALTH, EDUCATION, etc.
+  priority    Int? // 1-10
+  isRecurrent Boolean @default(false) // PIP récurrent ou ponctuel
+
+  // Workflow
+  status    String @default("PLANNED") // PLANNED, ONGOING, COMPLETED, CANCELLED
+  startYear Int?
+  endYear   Int?
+
+  createdBy String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  ministry      Ministry       @relation(fields: [ministryId], references: [id])
+  program       Program?       @relation(fields: [programId], references: [id])
+  action        Action?        @relation(fields: [actionId], references: [id])
+  activity      Activity?      @relation(fields: [activityId], references: [id])
+  fundingSource FundingSource? @relation(fields: [fundingSourceId], references: [id])
+
+  @@index([ministryId])
+  @@index([programId])
+  @@index([actionId])
+  @@index([status])
+  @@map("pip_projects")
+}
+
+// ===================================
+// CDMT GLOBAL (MINISTERIAL CEILINGS)
+// ===================================
+
+model CDMTGlobalScenario {
+  id           String  @id @default(uuid())
+  scenarioCode String  @unique
+  name         String
+  description  String?
+
+  // Données de référence
+  fiscalYear       Int // Année fiscale cible
+  macroFrameworkId String // Lien vers cadre macro
+  trendConfigId    String? // Lien vers config tendanciel
+
+  // Marge fiscale disponible (calculée depuis macro)
+  fiscalMarginY1 Decimal @db.Decimal(15, 2)
+  fiscalMarginY2 Decimal @db.Decimal(15, 2)
+  fiscalMarginY3 Decimal @db.Decimal(15, 2)
+
+  // Totaux (calculés)
+  totalBaselineY1 Decimal @default(0) @db.Decimal(15, 2)
+  totalBaselineY2 Decimal @default(0) @db.Decimal(15, 2)
+  totalBaselineY3 Decimal @default(0) @db.Decimal(15, 2)
+
+  totalMeasuresY1 Decimal @default(0) @db.Decimal(15, 2)
+  totalMeasuresY2 Decimal @default(0) @db.Decimal(15, 2)
+  totalMeasuresY3 Decimal @default(0) @db.Decimal(15, 2)
+
+  totalAllocatedY1 Decimal @default(0) @db.Decimal(15, 2)
+  totalAllocatedY2 Decimal @default(0) @db.Decimal(15, 2)
+  totalAllocatedY3 Decimal @default(0) @db.Decimal(15, 2)
+
+  totalCeilingY1 Decimal @default(0) @db.Decimal(15, 2)
+  totalCeilingY2 Decimal @default(0) @db.Decimal(15, 2)
+  totalCeilingY3 Decimal @default(0) @db.Decimal(15, 2)
+
+  // Enhanced workflow fields (5-level workflow)
+  status          String    @default("DRAFT") // DRAFT, SUBMITTED, UNDER_REVIEW, VALIDATED, APPROVED, REJECTED, ACTIVE, ARCHIVED
+  workflowStage   String? // Current validation stage/role
+  isActive        Boolean   @default(false) // Un seul scénario actif à la fois
+  activatedAt     DateTime?
+  activatedBy     String?
+  submittedAt     DateTime?
+  submittedBy     String?
+  reviewStartedAt DateTime?
+  reviewStartedBy String?
+  validatedAt     DateTime?
+  validatedBy     String?
+  approvedAt      DateTime?
+  approvedBy      String?
+  rejectedAt      DateTime?
+  rejectedBy      String?
+  rejectionReason String?
+  createdBy       String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  macroFramework MacroFramework     @relation(fields: [macroFrameworkId], references: [id])
+  trendConfig    TrendBudgetConfig? @relation(fields: [trendConfigId], references: [id])
+
+  policyMeasures      PolicyMeasure[]
+  marginAllocations   MarginAllocation[]
+  ministerialCeilings MinisterialCeiling[]
+
+  @@map("cdmt_global_scenarios")
+}
+
+model PolicyMeasure {
+  id         String @id @default(uuid())
+  scenarioId String
+  ministryId String
+
+  // Identification
+  measureCode String? // Code optionnel (ex: "RH-2024-01")
+  measureName String
+  description String?
+  category    String? // "PERSONNEL", "INVESTMENT", "OPERATION", "OTHER"
+
+  // Montants par année (peuvent être positifs ou négatifs)
+  amountY1 Decimal @db.Decimal(15, 2)
+  amountY2 Decimal @db.Decimal(15, 2)
+  amountY3 Decimal @db.Decimal(15, 2)
+
+  // Métadonnées
+  justification String?
+  source        String? // Source de la mesure
+
+  // Enhanced workflow fields (5-level workflow)
+  status          String    @default("DRAFT") // DRAFT, SUBMITTED, UNDER_REVIEW, VALIDATED, APPROVED, REJECTED
+  workflowStage   String? // Current validation stage/role
+  submittedAt     DateTime?
+  submittedBy     String?
+  reviewStartedAt DateTime?
+  reviewStartedBy String?
+  validatedAt     DateTime?
+  validatedBy     String?
+  approvedAt      DateTime?
+  approvedBy      String?
+  rejectedAt      DateTime?
+  rejectedBy      String?
+  rejectionReason String?
+  createdBy       String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  scenario CDMTGlobalScenario @relation(fields: [scenarioId], references: [id], onDelete: Cascade)
+  ministry Ministry           @relation(fields: [ministryId], references: [id])
+
+  @@unique([scenarioId, ministryId, measureCode])
+  @@index([scenarioId])
+  @@index([ministryId])
+  @@map("policy_measures")
+}
+
+model MarginAllocation {
+  id         String @id @default(uuid())
+  scenarioId String
+  ministryId String
+
+  // Allocation manuelle de la marge par année
+  allocatedY1 Decimal @default(0) @db.Decimal(15, 2)
+  allocatedY2 Decimal @default(0) @db.Decimal(15, 2)
+  allocatedY3 Decimal @default(0) @db.Decimal(15, 2)
+
+  // Justification et notes
+  notes            String?
+  allocationMethod String? // "MANUAL", "FORMULA_SUGGESTION" (pour traçabilité)
+
+  createdBy String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  scenario CDMTGlobalScenario @relation(fields: [scenarioId], references: [id], onDelete: Cascade)
+  ministry Ministry           @relation(fields: [ministryId], references: [id])
+
+  @@unique([scenarioId, ministryId])
+  @@index([scenarioId])
+  @@map("margin_allocations")
+}
+
+// ===================================
+// SPRINT 5.3: SECTORAL NEW MEASURES & ACTION PLANS
+// ===================================
+
+model SectoralMeasure {
+  id          String  @id @default(uuid())
+  measureCode String  @unique
+  name        String
+  nameAr      String?
+  nameEn      String?
+  description String?
+
+  // Polymorphic linkage: ACTION or ACTIVITY
+  entityType String // "ACTION" or "ACTIVITY"
+  ministryId String
+  programId  String?
+  actionId   String?
+  activityId String?
+
+  // Classification
+  category String? // "NEW_PERSONNEL", "NEW_OPERATION", "NEW_INVESTMENT", etc.
+  priority Int?
+
+  // Multi-year costing (quantity × unit cost)
+  quantityY1  Decimal @default(0) @db.Decimal(15, 2)
+  unitCostY1  Decimal @default(0) @db.Decimal(15, 2)
+  totalCostY1 Decimal @default(0) @db.Decimal(15, 2)
+
+  quantityY2  Decimal @default(0) @db.Decimal(15, 2)
+  unitCostY2  Decimal @default(0) @db.Decimal(15, 2)
+  totalCostY2 Decimal @default(0) @db.Decimal(15, 2)
+
+  quantityY3  Decimal @default(0) @db.Decimal(15, 2)
+  unitCostY3  Decimal @default(0) @db.Decimal(15, 2)
+  totalCostY3 Decimal @default(0) @db.Decimal(15, 2)
+
+  totalCost Decimal @db.Decimal(15, 2)
+
+  // Economic classification
+  economicNatureId String?
+  fundingSourceId  String?
+
+  // Justification
+  justification        String?
+  expectedImpact       String?
+  performanceIndicator String?
+
+  // Enhanced workflow fields (5-level workflow)
+  status          String    @default("DRAFT") // DRAFT, SUBMITTED, UNDER_REVIEW, VALIDATED, APPROVED, REJECTED
+  workflowStage   String? // Current validation stage/role
+  submittedAt     DateTime?
+  submittedBy     String?
+  reviewStartedAt DateTime?
+  reviewStartedBy String?
+  validatedAt     DateTime?
+  validatedBy     String?
+  approvedAt      DateTime?
+  approvedBy      String?
+  rejectedAt      DateTime?
+  rejectedBy      String?
+  rejectionReason String?
+  integratedAt    DateTime? // Legacy field, kept for compatibility
+
+  fiscalYear Int
+
+  createdBy String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  ministry       Ministry        @relation(fields: [ministryId], references: [id])
+  program        Program?        @relation(fields: [programId], references: [id])
+  action         Action?         @relation(fields: [actionId], references: [id], onDelete: Cascade)
+  activity       Activity?       @relation(fields: [activityId], references: [id], onDelete: Cascade)
+  economicNature EconomicNature? @relation(fields: [economicNatureId], references: [id])
+  fundingSource  FundingSource?  @relation(fields: [fundingSourceId], references: [id])
+  actionPlans    ActionPlan[]
+
+  @@index([ministryId])
+  @@index([actionId])
+  @@index([activityId])
+  @@index([fiscalYear])
+  @@index([status])
+  @@index([economicNatureId])
+  @@index([fundingSourceId])
+  @@index([ministryId, fiscalYear, status]) // Composite index for common filter combination
+  @@index([ministryId, fiscalYear]) // For summary queries
+  @@map("sectoral_measures")
+}
+
+model ActionPlan {
+  id          String  @id @default(uuid())
+  planCode    String  @unique
+  name        String
+  nameAr      String?
+  nameEn      String?
+  description String?
+
+  sectoralMeasureId String
+  ministryId        String
+  fiscalYear        Int
+
+  // Timeline
+  startDate DateTime?
+  endDate   DateTime?
+  duration  Int?
+
+  // Objectives
+  objectives            String?
+  expectedResults       String?
+  performanceIndicators Json?
+
+  // Resources
+  humanResources       String?
+  technicalResources   String?
+  institutionalSupport String?
+
+  // Risk management
+  risks              Json?
+  mitigationMeasures String?
+
+  // Costing (aggregated from activities)
+  totalCostY1 Decimal @default(0) @db.Decimal(15, 2)
+  totalCostY2 Decimal @default(0) @db.Decimal(15, 2)
+  totalCostY3 Decimal @default(0) @db.Decimal(15, 2)
+  totalCost   Decimal @default(0) @db.Decimal(15, 2)
+
+  // Enhanced workflow fields (5-level workflow)
+  status        String   @default("DRAFT") // DRAFT, SUBMITTED, UNDER_REVIEW, VALIDATED, APPROVED, REJECTED
+  workflowStage String? // Current validation stage/role
+  progress      Decimal? @db.Decimal(5, 2)
+
+  responsibleEntity String?
+  coordinator       String?
+
+  submittedAt     DateTime?
+  submittedBy     String?
+  reviewStartedAt DateTime?
+  reviewStartedBy String?
+  validatedAt     DateTime?
+  validatedBy     String?
+  approvedAt      DateTime?
+  approvedBy      String?
+  rejectedAt      DateTime?
+  rejectedBy      String?
+  rejectionReason String?
+
+  createdBy String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  sectoralMeasure SectoralMeasure      @relation(fields: [sectoralMeasureId], references: [id], onDelete: Cascade)
+  ministry        Ministry             @relation(fields: [ministryId], references: [id])
+  activities      ActionPlanActivity[]
+
+  @@index([sectoralMeasureId])
+  @@index([ministryId])
+  @@index([fiscalYear])
+  @@index([status]) // Frequently filtered
+  @@index([ministryId, fiscalYear]) // Common combination for summary queries
+  @@map("action_plans")
+}
+
+model ActionPlanActivity {
+  id           String  @id @default(uuid())
+  activityCode String
+  name         String
+  description  String?
+  actionPlanId String
+
+  orderIndex   Int     @default(0)
+  dependencies String?
+
+  // Timeline
+  plannedStartDate DateTime?
+  plannedEndDate   DateTime?
+  actualStartDate  DateTime?
+  actualEndDate    DateTime?
+
+  // Costing (quantity × unit cost)
+  quantityY1  Decimal @default(0) @db.Decimal(15, 2)
+  unitCostY1  Decimal @default(0) @db.Decimal(15, 2)
+  totalCostY1 Decimal @default(0) @db.Decimal(15, 2)
+
+  quantityY2  Decimal @default(0) @db.Decimal(15, 2)
+  unitCostY2  Decimal @default(0) @db.Decimal(15, 2)
+  totalCostY2 Decimal @default(0) @db.Decimal(15, 2)
+
+  quantityY3  Decimal @default(0) @db.Decimal(15, 2)
+  unitCostY3  Decimal @default(0) @db.Decimal(15, 2)
+  totalCostY3 Decimal @default(0) @db.Decimal(15, 2)
+
+  totalCost Decimal @db.Decimal(15, 2)
+
+  assignedTo   String?
+  resourceType String?
+  deliverables Json?
+
+  status   String   @default("PLANNED")
+  progress Decimal? @db.Decimal(5, 2)
+  notes    String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  actionPlan ActionPlan @relation(fields: [actionPlanId], references: [id], onDelete: Cascade)
+
+  @@unique([actionPlanId, activityCode])
+  @@index([actionPlanId])
+  @@map("action_plan_activities")
+}
+
+model WorkflowHistory {
+  id String @id @default(uuid())
+
+  // Polymorphic document reference
+  documentType String // "SECTORAL_MEASURE", "ACTION_PLAN", "MACRO_FRAMEWORK", etc.
+  documentId   String
+  documentCode String? // For display purposes
+
+  // Workflow state transition
+  fromStatus String? // null for initial creation
+  toStatus   String // "DRAFT", "SUBMITTED", "UNDER_REVIEW", "VALIDATED", "APPROVED", "REJECTED"
+
+  // Action metadata
+  action   String // "CREATED", "SUBMITTED", "REVIEWED", "VALIDATED", "APPROVED", "REJECTED", "RETURNED"
+  actionBy String // User ID
+  actionAt DateTime @default(now())
+
+  // Comments and justification
+  comment         String?
+  rejectionReason String?
+
+  // Approval metadata
+  validatorRole String? // Role of the person performing action
+  validatorName String? // Cached name for display
+
+  // Relations
+  actionByUser User @relation(fields: [actionBy], references: [id])
+
+  @@index([documentType, documentId])
+  @@index([documentType, toStatus])
+  @@index([actionBy])
+  @@index([actionAt])
+  @@map("workflow_history")
+}

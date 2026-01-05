@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document soumis pour validation</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      background-color: #f5f5f5;
+      color: #333333;
+    }
+    .container {
+      max-width: 600px;
+      margin: 0 auto;
+      background-color: #ffffff;
+    }
+    .header {
+      background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%);
+      padding: 30px 20px;
+      text-align: center;
+    }
+    .header h1 {
+      margin: 0;
+      color: #ffffff;
+      font-size: 24px;
+      font-weight: 600;
+    }
+    .header p {
+      margin: 8px 0 0 0;
+      color: #e0e7ff;
+      font-size: 14px;
+    }
+    .content {
+      padding: 40px 30px;
+    }
+    .greeting {
+      font-size: 16px;
+      color: #374151;
+      margin-bottom: 20px;
+    }
+    .message {
+      font-size: 15px;
+      line-height: 1.6;
+      color: #4b5563;
+      margin-bottom: 30px;
+    }
+    .button {
+      display: inline-block;
+      padding: 12px 30px;
+      background-color: #3b82f6;
+      color: #ffffff !important;
+      text-decoration: none;
+      border-radius: 6px;
+      font-weight: 500;
+      font-size: 15px;
+      margin: 10px 0;
+    }
+    .info-box {
+      background-color: #eff6ff;
+      border-left: 4px solid #3b82f6;
+      padding: 15px 20px;
+      margin: 20px 0;
+      border-radius: 4px;
+    }
+    .info-box p {
+      margin: 5px 0;
+      font-size: 14px;
+      color: #1e40af;
+    }
+    .info-box strong {
+      color: #1e3a8a;
+    }
+    .footer {
+      background-color: #f9fafb;
+      padding: 20px 30px;
+      text-align: center;
+      border-top: 1px solid #e5e7eb;
+    }
+    .footer p {
+      margin: 5px 0;
+      font-size: 13px;
+      color: #6b7280;
+    }
+    .footer a {
+      color: #3b82f6;
+      text-decoration: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Header -->
+    <div class="header">
+      <h1>CDMT</h1>
+      <p>Cadre de Dépenses à Moyen Terme</p>
+    </div>
+
+    <!-- Content -->
+    <div class="content">
+      <p class="greeting">Bonjour {{recipientName}},</p>
+
+      <p class="message">
+        Un nouveau document a été soumis pour validation et requiert votre attention.
+      </p>
+
+      <div class="info-box">
+        <p><strong>Type de document:</strong> {{documentType}}</p>
+        <p><strong>Code:</strong> {{documentCode}}</p>
+        <p><strong>Soumis par:</strong> {{actionBy}}</p>
+        <p><strong>Date de soumission:</strong> {{actionDate}}</p>
+        {{#comment}}
+        <p><strong>Commentaire:</strong> {{comment}}</p>
+        {{/comment}}
+      </div>
+
+      <p class="message">
+        Veuillez examiner ce document et effectuer la validation nécessaire dans les plus brefs délais.
+      </p>
+
+      <a href="{{documentLink}}" class="button">Voir le document</a>
+    </div>
+
+    <!-- Footer -->
+    <div class="footer">
+      <p>Cet email a été généré automatiquement par le système CDMT.</p>
+      <p>Pour toute question, contactez l'administrateur système.</p>
+      <p style="margin-top: 15px;">
+        <a href="{{appUrl}}">Accéder au système CDMT</a>
+      </p>
+    </div>
+  </div>
+</body>
+</html>
