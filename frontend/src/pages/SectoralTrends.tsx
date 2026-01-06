@@ -62,18 +62,21 @@ const SectoralTrends: React.FC = () => {
 
       // Load ministries
       const ministriesRes = await apiClient.get('/ministries?limit=100');
-      setMinistries(ministriesRes.data.data || []);
+      const ministriesData = ministriesRes.data.data; setMinistries(Array.isArray(ministriesData) ? ministriesData : (ministriesData?.data || []));
 
-      // Load ceilings for multiple years to calculate trends
+      // Load ceilings for multiple years to calculate trends (handle missing endpoint)
       const [y1Res, y2Res, y3Res] = await Promise.all([
-        apiClient.get(`/ministerial-ceilings?year=${currentYear}`),
-        apiClient.get(`/ministerial-ceilings?year=${currentYear + 1}`),
-        apiClient.get(`/ministerial-ceilings?year=${currentYear + 2}`),
+        apiClient.get(`/ministerial-ceilings?year=${currentYear}`).catch(() => ({ data: { data: [] } })),
+        apiClient.get(`/ministerial-ceilings?year=${currentYear + 1}`).catch(() => ({ data: { data: [] } })),
+        apiClient.get(`/ministerial-ceilings?year=${currentYear + 2}`).catch(() => ({ data: { data: [] } })),
       ]);
 
-      const y1Data = y1Res.data.data || [];
-      const y2Data = y2Res.data.data || [];
-      const y3Data = y3Res.data.data || [];
+      const y1Raw = y1Res.data.data;
+      const y2Raw = y2Res.data.data;
+      const y3Raw = y3Res.data.data;
+      const y1Data = Array.isArray(y1Raw) ? y1Raw : (y1Raw?.data || []);
+      const y2Data = Array.isArray(y2Raw) ? y2Raw : (y2Raw?.data || []);
+      const y3Data = Array.isArray(y3Raw) ? y3Raw : (y3Raw?.data || []);
 
       // Combine data by ministry
       const trendMap = new Map<string, TrendData>();
