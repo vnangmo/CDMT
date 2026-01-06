@@ -3,9 +3,22 @@ import { NotFoundError, BadRequestError } from '../middleware/errorHandler';
 
 const prisma = new PrismaClient();
 
+// Méthodes de calcul du tendanciel conformes au Guide Méthodologique CDMT (p.17)
+export enum BaselineCalculationMethod {
+  BUDGET_N_ONLY = 'BUDGET_N_ONLY',         // Conforme au Guide: Budget N seul
+  HISTORICAL_AVERAGE = 'HISTORICAL_AVERAGE', // Moyenne des années historiques
+}
+
 export class TrendCalculationService {
   /**
-   * Calculer le montant de base (moyenne des historiques)
+   * Calculer le montant de base selon la méthode configurée
+   *
+   * Guide Méthodologique CDMT (p.17):
+   * "Tendanciel = (Budget N - dépenses temporaires N) × (1 + taux croissance tendanciel)"
+   *
+   * Deux méthodes supportées:
+   * - BUDGET_N_ONLY: Utilise uniquement le Budget de l'année N (conforme au Guide)
+   * - HISTORICAL_AVERAGE: Utilise la moyenne des années historiques (approche alternative)
    */
   static async calculateBaseAmount(
     trendConfigId: string,
@@ -17,6 +30,7 @@ export class TrendCalculationService {
     baseAmount: number;
     historicalYearsUsed: number[];
     temporaryExcluded: boolean;
+    calculationMethod: string;
   }> {
     // Récupérer la configuration
     const config = await prisma.trendBudgetConfig.findUnique({
@@ -27,14 +41,13 @@ export class TrendCalculationService {
       throw new NotFoundError('Configuration de budget tendanciel non trouvée');
     }
 
+    // Déterminer la méthode de calcul (par défaut: BUDGET_N_ONLY conforme au Guide)
+    const calculationMethod = (config as any).baselineCalculationMethod || BaselineCalculationMethod.BUDGET_N_ONLY;
+
     // Construire les conditions de recherche
     const where: any = {
       trendConfigId,
       ministryId,
-      fiscalYear: {
-        gte: config.baselineStartYear,
-        lte: config.baselineEndYear,
-      },
     };
 
     // Ajouter les filtres optionnels (gestion des valeurs null/undefined)
@@ -42,43 +55,66 @@ export class TrendCalculationService {
     if (economicNatureId !== undefined) where.economicNatureId = economicNatureId;
     if (fundingSourceId !== undefined) where.fundingSourceId = fundingSourceId;
 
-    // Exclure les temporaires si configuré
+    // Exclure les temporaires si configuré (conforme au Guide: "Budget N - dépenses temporaires")
     if (config.excludeTemporary) {
       where.isTemporary = false;
     }
 
-    // Récupérer les budgets historiques
-    const historicals = await prisma.historicalBudget.findMany({
-      where,
-      select: {
-        fiscalYear: true,
-        budgetAmount: true,
-      },
-      orderBy: {
-        fiscalYear: 'asc',
-      },
-    });
+    let baseAmount = 0;
+    let yearsUsed: number[] = [];
 
-    if (historicals.length === 0) {
-      return {
-        baseAmount: 0,
-        historicalYearsUsed: [],
-        temporaryExcluded: config.excludeTemporary,
+    if (calculationMethod === BaselineCalculationMethod.BUDGET_N_ONLY) {
+      // MÉTHODE CONFORME AU GUIDE: Utiliser uniquement Budget N (année de référence = baselineEndYear)
+      where.fiscalYear = config.baselineEndYear;
+
+      const budgetN = await prisma.historicalBudget.findMany({
+        where,
+        select: {
+          fiscalYear: true,
+          budgetAmount: true,
+        },
+      });
+
+      if (budgetN.length > 0) {
+        baseAmount = budgetN.reduce(
+          (sum, h) => sum + parseFloat(h.budgetAmount.toString()),
+          0
+        );
+        yearsUsed = [config.baselineEndYear];
+      }
+    } else {
+      // MÉTHODE ALTERNATIVE: Moyenne des années historiques
+      where.fiscalYear = {
+        gte: config.baselineStartYear,
+        lte: config.baselineEndYear,
       };
-    }
 
-    // Calculer la moyenne
-    const totalAmount = historicals.reduce(
-      (sum, h) => sum + parseFloat(h.budgetAmount.toString()),
-      0
-    );
-    const baseAmount = totalAmount / historicals.length;
-    const yearsUsed = historicals.map((h) => h.fiscalYear);
+      const historicals = await prisma.historicalBudget.findMany({
+        where,
+        select: {
+          fiscalYear: true,
+          budgetAmount: true,
+        },
+        orderBy: {
+          fiscalYear: 'asc',
+        },
+      });
+
+      if (historicals.length > 0) {
+        const totalAmount = historicals.reduce(
+          (sum, h) => sum + parseFloat(h.budgetAmount.toString()),
+          0
+        );
+        baseAmount = totalAmount / historicals.length;
+        yearsUsed = historicals.map((h) => h.fiscalYear);
+      }
+    }
 
     return {
       baseAmount,
       historicalYearsUsed: yearsUsed,
       temporaryExcluded: config.excludeTemporary,
+      calculationMethod,
     };
   }
 

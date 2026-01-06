@@ -1063,6 +1063,11 @@ model TrendBudgetConfig {
   // Exclusions
   excludeTemporary Boolean @default(true)
 
+  // Méthode de calcul du tendanciel (Guide Méthodologique CDMT, p.17)
+  // BUDGET_N_ONLY: Utilise Budget N seul (conforme au Guide)
+  // HISTORICAL_AVERAGE: Utilise la moyenne des années historiques
+  baselineCalculationMethod String @default("BUDGET_N_ONLY")
+
   // Enhanced workflow fields (5-level workflow)
   status          String    @default("DRAFT") // DRAFT, SUBMITTED, UNDER_REVIEW, VALIDATED, APPROVED, REJECTED
   workflowStage   String? // Current validation stage/role
@@ -1333,6 +1338,29 @@ model CDMTGlobalScenario {
   fiscalMarginY1 Decimal @db.Decimal(15, 2)
   fiscalMarginY2 Decimal @db.Decimal(15, 2)
   fiscalMarginY3 Decimal @db.Decimal(15, 2)
+
+  // Marge de manœuvre par catégorie économique (Guide Méthodologique CDMT, p.20)
+  // Formule: Marge = Dépenses CBMT par catégorie - Tendanciel par catégorie
+  // Personnel
+  marginPersonnelY1 Decimal @default(0) @db.Decimal(15, 2)
+  marginPersonnelY2 Decimal @default(0) @db.Decimal(15, 2)
+  marginPersonnelY3 Decimal @default(0) @db.Decimal(15, 2)
+  // Biens et Services
+  marginGoodsServicesY1 Decimal @default(0) @db.Decimal(15, 2)
+  marginGoodsServicesY2 Decimal @default(0) @db.Decimal(15, 2)
+  marginGoodsServicesY3 Decimal @default(0) @db.Decimal(15, 2)
+  // Transferts
+  marginTransfersY1 Decimal @default(0) @db.Decimal(15, 2)
+  marginTransfersY2 Decimal @default(0) @db.Decimal(15, 2)
+  marginTransfersY3 Decimal @default(0) @db.Decimal(15, 2)
+  // Investissements internes
+  marginInternalInvestmentY1 Decimal @default(0) @db.Decimal(15, 2)
+  marginInternalInvestmentY2 Decimal @default(0) @db.Decimal(15, 2)
+  marginInternalInvestmentY3 Decimal @default(0) @db.Decimal(15, 2)
+  // Investissements externes
+  marginExternalInvestmentY1 Decimal @default(0) @db.Decimal(15, 2)
+  marginExternalInvestmentY2 Decimal @default(0) @db.Decimal(15, 2)
+  marginExternalInvestmentY3 Decimal @default(0) @db.Decimal(15, 2)
 
   // Totaux (calculés)
   totalBaselineY1 Decimal @default(0) @db.Decimal(15, 2)

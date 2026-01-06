@@ -33,6 +33,50 @@ interface MarginValidationResult {
   remainingMarginY3: number;
 }
 
+/**
+ * Marge de manœuvre par catégorie économique
+ * Conforme au Guide Méthodologique CDMT (p.20)
+ * Formule: Marge = Dépenses CBMT par catégorie - Tendanciel par catégorie
+ */
+interface FiscalMarginByCategory {
+  // Personnel
+  personnelCBMT: { y1: number; y2: number; y3: number };
+  personnelTendanciel: { y1: number; y2: number; y3: number };
+  personnelMargin: { y1: number; y2: number; y3: number };
+
+  // Biens et Services
+  goodsServicesCBMT: { y1: number; y2: number; y3: number };
+  goodsServicesTendanciel: { y1: number; y2: number; y3: number };
+  goodsServicesMargin: { y1: number; y2: number; y3: number };
+
+  // Transferts
+  transfersCBMT: { y1: number; y2: number; y3: number };
+  transfersTendanciel: { y1: number; y2: number; y3: number };
+  transfersMargin: { y1: number; y2: number; y3: number };
+
+  // Investissements internes
+  internalInvestmentCBMT: { y1: number; y2: number; y3: number };
+  internalInvestmentTendanciel: { y1: number; y2: number; y3: number };
+  internalInvestmentMargin: { y1: number; y2: number; y3: number };
+
+  // Investissements externes
+  externalInvestmentCBMT: { y1: number; y2: number; y3: number };
+  externalInvestmentTendanciel: { y1: number; y2: number; y3: number };
+  externalInvestmentMargin: { y1: number; y2: number; y3: number };
+
+  // Total global
+  totalMargin: { y1: number; y2: number; y3: number };
+}
+
+// Catégories économiques selon le Guide Méthodologique CDMT
+enum EconomicCategory {
+  PERSONNEL = 'PERSONNEL',
+  GOODS_SERVICES = 'GOODS_SERVICES',
+  TRANSFERS = 'TRANSFERS',
+  INTERNAL_INVESTMENT = 'INTERNAL_INVESTMENT',
+  EXTERNAL_INVESTMENT = 'EXTERNAL_INVESTMENT',
+}
+
 export class CDMTGlobalCalculationService {
   /**
    * Calculer la marge fiscale depuis le cadre macroéconomique
@@ -96,6 +140,228 @@ export class CDMTGlobalCalculationService {
         expensesY3,
       },
     };
+  }
+
+  /**
+   * Calculer la marge de manœuvre par catégorie économique
+   *
+   * Guide Méthodologique CDMT (p.20):
+   * "Marge de manœuvre = Dépenses catégorie X (CBMT) - Tendanciel catégorie X (tous ministères)"
+   *
+   * Cette méthode calcule la marge pour chaque catégorie économique:
+   * - Personnel
+   * - Biens et Services
+   * - Transferts
+   * - Investissements internes
+   * - Investissements externes
+   */
+  static async calculateFiscalMarginByCategory(
+    cbmtDocumentId: string,
+    trendConfigId: string
+  ): Promise<FiscalMarginByCategory> {
+    // Récupérer les agrégats CBMT par catégorie
+    const cbmtAggregates = await prisma.cBMTAggregate.findMany({
+      where: {
+        cbmtDocumentId,
+        aggregateType: 'EXPENSE',
+      },
+      include: {
+        cbmtDocument: true,
+      },
+    });
+
+    // Récupérer les projections tendancielles
+    const trendProjections = await prisma.trendProjection.findMany({
+      where: { trendConfigId },
+      include: {
+        economicNature: true,
+        fundingSource: true,
+      },
+    });
+
+    // Récupérer les natures économiques pour le mapping
+    const economicNatures = await prisma.economicNature.findMany();
+
+    // Mapping des natures vers les catégories du Guide
+    const categoryMapping: Record<string, EconomicCategory> = {};
+    for (const nature of economicNatures) {
+      const code = nature.code.toString();
+      if (code.startsWith('1') || nature.name.toLowerCase().includes('personnel')) {
+        categoryMapping[nature.id] = EconomicCategory.PERSONNEL;
+      } else if (code.startsWith('2') || nature.name.toLowerCase().includes('bien') || nature.name.toLowerCase().includes('service')) {
+        categoryMapping[nature.id] = EconomicCategory.GOODS_SERVICES;
+      } else if (code.startsWith('3') || nature.name.toLowerCase().includes('transfert')) {
+        categoryMapping[nature.id] = EconomicCategory.TRANSFERS;
+      } else if (code.startsWith('4') || code.startsWith('5')) {
+        categoryMapping[nature.id] = EconomicCategory.INTERNAL_INVESTMENT;
+      } else {
+        categoryMapping[nature.id] = EconomicCategory.GOODS_SERVICES;
+      }
+    }
+
+    // Sources de financement externes
+    const externalFundingSources = await prisma.fundingSource.findMany({
+      where: {
+        OR: [
+          { code: { contains: 'EXT' } },
+          { name: { contains: 'externe' } },
+          { name: { contains: 'Externe' } },
+          { name: { contains: 'PTF' } },
+          { type: { contains: 'EXTERNAL' } },
+        ],
+      },
+    });
+    const externalSourceIds = new Set(externalFundingSources.map(f => f.id));
+
+    // Initialiser les résultats CBMT par catégorie
+    const cbmtByCategory: Record<EconomicCategory, { y1: number; y2: number; y3: number }> = {
+      [EconomicCategory.PERSONNEL]: { y1: 0, y2: 0, y3: 0 },
+      [EconomicCategory.GOODS_SERVICES]: { y1: 0, y2: 0, y3: 0 },
+      [EconomicCategory.TRANSFERS]: { y1: 0, y2: 0, y3: 0 },
+      [EconomicCategory.INTERNAL_INVESTMENT]: { y1: 0, y2: 0, y3: 0 },
+      [EconomicCategory.EXTERNAL_INVESTMENT]: { y1: 0, y2: 0, y3: 0 },
+    };
+
+    // Agréger les dépenses CBMT par catégorie
+    for (const aggregate of cbmtAggregates) {
+      const code = aggregate.categoryCode.toString();
+      let category: EconomicCategory;
+
+      if (code.startsWith('1') || aggregate.categoryName.toLowerCase().includes('personnel')) {
+        category = EconomicCategory.PERSONNEL;
+      } else if (code.startsWith('2') || aggregate.categoryName.toLowerCase().includes('bien') || aggregate.categoryName.toLowerCase().includes('service')) {
+        category = EconomicCategory.GOODS_SERVICES;
+      } else if (code.startsWith('3') || aggregate.categoryName.toLowerCase().includes('transfert')) {
+        category = EconomicCategory.TRANSFERS;
+      } else if (code.startsWith('4') || aggregate.categoryName.toLowerCase().includes('invest') && aggregate.categoryName.toLowerCase().includes('intern')) {
+        category = EconomicCategory.INTERNAL_INVESTMENT;
+      } else if (code.startsWith('5') || aggregate.categoryName.toLowerCase().includes('invest') && aggregate.categoryName.toLowerCase().includes('extern')) {
+        category = EconomicCategory.EXTERNAL_INVESTMENT;
+      } else {
+        category = EconomicCategory.GOODS_SERVICES;
+      }
+
+      cbmtByCategory[category].y1 += parseFloat(aggregate.amount1.toString());
+      cbmtByCategory[category].y2 += parseFloat(aggregate.amount2.toString());
+      cbmtByCategory[category].y3 += parseFloat(aggregate.amount3.toString());
+    }
+
+    // Initialiser les résultats Tendanciel par catégorie
+    const tendancielByCategory: Record<EconomicCategory, { y1: number; y2: number; y3: number }> = {
+      [EconomicCategory.PERSONNEL]: { y1: 0, y2: 0, y3: 0 },
+      [EconomicCategory.GOODS_SERVICES]: { y1: 0, y2: 0, y3: 0 },
+      [EconomicCategory.TRANSFERS]: { y1: 0, y2: 0, y3: 0 },
+      [EconomicCategory.INTERNAL_INVESTMENT]: { y1: 0, y2: 0, y3: 0 },
+      [EconomicCategory.EXTERNAL_INVESTMENT]: { y1: 0, y2: 0, y3: 0 },
+    };
+
+    // Agréger les tendanciels par catégorie
+    for (const projection of trendProjections) {
+      let category = categoryMapping[projection.economicNatureId || ''] || EconomicCategory.GOODS_SERVICES;
+
+      // Si c'est un investissement avec financement externe
+      if (category === EconomicCategory.INTERNAL_INVESTMENT && projection.fundingSourceId && externalSourceIds.has(projection.fundingSourceId)) {
+        category = EconomicCategory.EXTERNAL_INVESTMENT;
+      }
+
+      tendancielByCategory[category].y1 += parseFloat(projection.projectedAmount1.toString());
+      tendancielByCategory[category].y2 += parseFloat(projection.projectedAmount2.toString());
+      tendancielByCategory[category].y3 += parseFloat(projection.projectedAmount3.toString());
+    }
+
+    // Calculer la marge par catégorie (CBMT - Tendanciel)
+    const personnelMargin = {
+      y1: cbmtByCategory[EconomicCategory.PERSONNEL].y1 - tendancielByCategory[EconomicCategory.PERSONNEL].y1,
+      y2: cbmtByCategory[EconomicCategory.PERSONNEL].y2 - tendancielByCategory[EconomicCategory.PERSONNEL].y2,
+      y3: cbmtByCategory[EconomicCategory.PERSONNEL].y3 - tendancielByCategory[EconomicCategory.PERSONNEL].y3,
+    };
+
+    const goodsServicesMargin = {
+      y1: cbmtByCategory[EconomicCategory.GOODS_SERVICES].y1 - tendancielByCategory[EconomicCategory.GOODS_SERVICES].y1,
+      y2: cbmtByCategory[EconomicCategory.GOODS_SERVICES].y2 - tendancielByCategory[EconomicCategory.GOODS_SERVICES].y2,
+      y3: cbmtByCategory[EconomicCategory.GOODS_SERVICES].y3 - tendancielByCategory[EconomicCategory.GOODS_SERVICES].y3,
+    };
+
+    const transfersMargin = {
+      y1: cbmtByCategory[EconomicCategory.TRANSFERS].y1 - tendancielByCategory[EconomicCategory.TRANSFERS].y1,
+      y2: cbmtByCategory[EconomicCategory.TRANSFERS].y2 - tendancielByCategory[EconomicCategory.TRANSFERS].y2,
+      y3: cbmtByCategory[EconomicCategory.TRANSFERS].y3 - tendancielByCategory[EconomicCategory.TRANSFERS].y3,
+    };
+
+    const internalInvestmentMargin = {
+      y1: cbmtByCategory[EconomicCategory.INTERNAL_INVESTMENT].y1 - tendancielByCategory[EconomicCategory.INTERNAL_INVESTMENT].y1,
+      y2: cbmtByCategory[EconomicCategory.INTERNAL_INVESTMENT].y2 - tendancielByCategory[EconomicCategory.INTERNAL_INVESTMENT].y2,
+      y3: cbmtByCategory[EconomicCategory.INTERNAL_INVESTMENT].y3 - tendancielByCategory[EconomicCategory.INTERNAL_INVESTMENT].y3,
+    };
+
+    const externalInvestmentMargin = {
+      y1: cbmtByCategory[EconomicCategory.EXTERNAL_INVESTMENT].y1 - tendancielByCategory[EconomicCategory.EXTERNAL_INVESTMENT].y1,
+      y2: cbmtByCategory[EconomicCategory.EXTERNAL_INVESTMENT].y2 - tendancielByCategory[EconomicCategory.EXTERNAL_INVESTMENT].y2,
+      y3: cbmtByCategory[EconomicCategory.EXTERNAL_INVESTMENT].y3 - tendancielByCategory[EconomicCategory.EXTERNAL_INVESTMENT].y3,
+    };
+
+    // Marge totale
+    const totalMargin = {
+      y1: personnelMargin.y1 + goodsServicesMargin.y1 + transfersMargin.y1 + internalInvestmentMargin.y1 + externalInvestmentMargin.y1,
+      y2: personnelMargin.y2 + goodsServicesMargin.y2 + transfersMargin.y2 + internalInvestmentMargin.y2 + externalInvestmentMargin.y2,
+      y3: personnelMargin.y3 + goodsServicesMargin.y3 + transfersMargin.y3 + internalInvestmentMargin.y3 + externalInvestmentMargin.y3,
+    };
+
+    return {
+      personnelCBMT: cbmtByCategory[EconomicCategory.PERSONNEL],
+      personnelTendanciel: tendancielByCategory[EconomicCategory.PERSONNEL],
+      personnelMargin,
+
+      goodsServicesCBMT: cbmtByCategory[EconomicCategory.GOODS_SERVICES],
+      goodsServicesTendanciel: tendancielByCategory[EconomicCategory.GOODS_SERVICES],
+      goodsServicesMargin,
+
+      transfersCBMT: cbmtByCategory[EconomicCategory.TRANSFERS],
+      transfersTendanciel: tendancielByCategory[EconomicCategory.TRANSFERS],
+      transfersMargin,
+
+      internalInvestmentCBMT: cbmtByCategory[EconomicCategory.INTERNAL_INVESTMENT],
+      internalInvestmentTendanciel: tendancielByCategory[EconomicCategory.INTERNAL_INVESTMENT],
+      internalInvestmentMargin,
+
+      externalInvestmentCBMT: cbmtByCategory[EconomicCategory.EXTERNAL_INVESTMENT],
+      externalInvestmentTendanciel: tendancielByCategory[EconomicCategory.EXTERNAL_INVESTMENT],
+      externalInvestmentMargin,
+
+      totalMargin,
+    };
+  }
+
+  /**
+   * Mettre à jour la marge par catégorie dans un scénario CDMT Global
+   */
+  static async updateScenarioMarginByCategory(
+    scenarioId: string,
+    cbmtDocumentId: string,
+    trendConfigId: string
+  ): Promise<void> {
+    const marginByCategory = await this.calculateFiscalMarginByCategory(cbmtDocumentId, trendConfigId);
+
+    await prisma.cDMTGlobalScenario.update({
+      where: { id: scenarioId },
+      data: {
+        marginPersonnelY1: marginByCategory.personnelMargin.y1,
+        marginPersonnelY2: marginByCategory.personnelMargin.y2,
+        marginPersonnelY3: marginByCategory.personnelMargin.y3,
+        marginGoodsServicesY1: marginByCategory.goodsServicesMargin.y1,
+        marginGoodsServicesY2: marginByCategory.goodsServicesMargin.y2,
+        marginGoodsServicesY3: marginByCategory.goodsServicesMargin.y3,
+        marginTransfersY1: marginByCategory.transfersMargin.y1,
+        marginTransfersY2: marginByCategory.transfersMargin.y2,
+        marginTransfersY3: marginByCategory.transfersMargin.y3,
+        marginInternalInvestmentY1: marginByCategory.internalInvestmentMargin.y1,
+        marginInternalInvestmentY2: marginByCategory.internalInvestmentMargin.y2,
+        marginInternalInvestmentY3: marginByCategory.internalInvestmentMargin.y3,
+        marginExternalInvestmentY1: marginByCategory.externalInvestmentMargin.y1,
+        marginExternalInvestmentY2: marginByCategory.externalInvestmentMargin.y2,
+        marginExternalInvestmentY3: marginByCategory.externalInvestmentMargin.y3,
+      },
+    });
   }
 
   /**

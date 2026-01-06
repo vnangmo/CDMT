@@ -3,10 +3,20 @@ import { NotFoundError, BadRequestError } from '../middleware/errorHandler';
 
 const prisma = new PrismaClient();
 
+// Méthodes de calcul du tendanciel conformes au Guide Méthodologique CDMT (p.17)
+export enum BaselineCalculationMethod {
+  BUDGET_N_ONLY = 'BUDGET_N_ONLY',         // Conforme au Guide: Budget N seul
+  HISTORICAL_AVERAGE = 'HISTORICAL_AVERAGE', // Moyenne des années historiques
+}
+
 export class SectoralTrendCalculationService {
   /**
    * Calculer le montant de base pour le niveau sectoriel (Action/Activity)
-   * Exclut les dépenses exceptionnelles si configuré
+   *
+   * Guide Méthodologique CDMT (p.17):
+   * "Tendanciel = (Budget N - dépenses temporaires N) × (1 + taux croissance tendanciel)"
+   *
+   * Exclut les dépenses exceptionnelles et temporaires selon la configuration
    */
   static async calculateSectoralBaseAmount(
     trendConfigId: string,
@@ -22,6 +32,7 @@ export class SectoralTrendCalculationService {
     temporaryExcluded: boolean;
     exceptionalExcluded: boolean;
     exceptionalCount: number;
+    calculationMethod: string;
   }> {
     // Récupérer la configuration
     const config = await prisma.trendBudgetConfig.findUnique({
@@ -32,65 +43,97 @@ export class SectoralTrendCalculationService {
       throw new NotFoundError('Configuration de budget tendanciel non trouvée');
     }
 
-    // Construire les conditions de recherche
-    const where: any = {
+    // Déterminer la méthode de calcul (par défaut: BUDGET_N_ONLY conforme au Guide)
+    const calculationMethod = (config as any).baselineCalculationMethod || BaselineCalculationMethod.BUDGET_N_ONLY;
+
+    // Construire les conditions de recherche de base
+    const baseWhere: any = {
       trendConfigId,
       ministryId,
-      fiscalYear: {
-        gte: config.baselineStartYear,
-        lte: config.baselineEndYear,
-      },
     };
 
     // Ajouter les filtres optionnels
-    if (programId !== undefined) where.programId = programId;
-    if (actionId !== undefined) where.actionId = actionId;
-    if (activityId !== undefined) where.activityId = activityId;
-    if (economicNatureId !== undefined) where.economicNatureId = economicNatureId;
-    if (fundingSourceId !== undefined) where.fundingSourceId = fundingSourceId;
+    if (programId !== undefined) baseWhere.programId = programId;
+    if (actionId !== undefined) baseWhere.actionId = actionId;
+    if (activityId !== undefined) baseWhere.activityId = activityId;
+    if (economicNatureId !== undefined) baseWhere.economicNatureId = economicNatureId;
+    if (fundingSourceId !== undefined) baseWhere.fundingSourceId = fundingSourceId;
 
-    // Exclure les temporaires si configuré
+    // Exclure les temporaires si configuré (conforme au Guide: "Budget N - dépenses temporaires")
     if (config.excludeTemporary) {
-      where.isTemporary = false;
+      baseWhere.isTemporary = false;
     }
 
     // Compter les exceptionnels avant exclusion
     const exceptionalCount = await prisma.historicalBudget.count({
-      where: { ...where, isExceptional: true },
+      where: {
+        ...baseWhere,
+        fiscalYear: {
+          gte: config.baselineStartYear,
+          lte: config.baselineEndYear,
+        },
+        isExceptional: true,
+      },
     });
 
     // IMPORTANT: Toujours exclure les dépenses exceptionnelles du calcul de base
-    where.isExceptional = false;
+    baseWhere.isExceptional = false;
 
-    // Récupérer les budgets historiques
-    const historicals = await prisma.historicalBudget.findMany({
-      where,
-      select: {
-        fiscalYear: true,
-        budgetAmount: true,
-      },
-      orderBy: {
-        fiscalYear: 'asc',
-      },
-    });
+    let baseAmount = 0;
+    let yearsUsed: number[] = [];
 
-    if (historicals.length === 0) {
-      return {
-        baseAmount: 0,
-        historicalYearsUsed: [],
-        temporaryExcluded: config.excludeTemporary,
-        exceptionalExcluded: true,
-        exceptionalCount,
+    if (calculationMethod === BaselineCalculationMethod.BUDGET_N_ONLY) {
+      // MÉTHODE CONFORME AU GUIDE: Utiliser uniquement Budget N (année de référence = baselineEndYear)
+      const where = {
+        ...baseWhere,
+        fiscalYear: config.baselineEndYear,
       };
-    }
 
-    // Calculer la moyenne
-    const totalAmount = historicals.reduce(
-      (sum, h) => sum + parseFloat(h.budgetAmount.toString()),
-      0
-    );
-    const baseAmount = totalAmount / historicals.length;
-    const yearsUsed = historicals.map((h) => h.fiscalYear);
+      const budgetN = await prisma.historicalBudget.findMany({
+        where,
+        select: {
+          fiscalYear: true,
+          budgetAmount: true,
+        },
+      });
+
+      if (budgetN.length > 0) {
+        baseAmount = budgetN.reduce(
+          (sum, h) => sum + parseFloat(h.budgetAmount.toString()),
+          0
+        );
+        yearsUsed = [config.baselineEndYear];
+      }
+    } else {
+      // MÉTHODE ALTERNATIVE: Moyenne des années historiques
+      const where = {
+        ...baseWhere,
+        fiscalYear: {
+          gte: config.baselineStartYear,
+          lte: config.baselineEndYear,
+        },
+      };
+
+      const historicals = await prisma.historicalBudget.findMany({
+        where,
+        select: {
+          fiscalYear: true,
+          budgetAmount: true,
+        },
+        orderBy: {
+          fiscalYear: 'asc',
+        },
+      });
+
+      if (historicals.length > 0) {
+        const totalAmount = historicals.reduce(
+          (sum, h) => sum + parseFloat(h.budgetAmount.toString()),
+          0
+        );
+        baseAmount = totalAmount / historicals.length;
+        yearsUsed = historicals.map((h) => h.fiscalYear);
+      }
+    }
 
     return {
       baseAmount,
@@ -98,6 +141,7 @@ export class SectoralTrendCalculationService {
       temporaryExcluded: config.excludeTemporary,
       exceptionalExcluded: true,
       exceptionalCount,
+      calculationMethod,
     };
   }
 
