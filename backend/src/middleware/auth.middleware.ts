@@ -109,7 +109,7 @@ export const authorize = (requiredPermissions: string[]) => {
       }
 
       // Admin système a toutes les permissions
-      if (req.user.roleCode === 'ADMIN_SYSTEM') {
+      if (req.user.roleCode === 'ADMIN' || req.user.roleCode === 'ADMIN_SYSTEM') {
         return next();
       }
 
@@ -249,7 +249,8 @@ export const checkPermission = (module: string, action: string) => {
   };
 
   const permissionSuffix = actionMap[action] || action.toUpperCase();
-  const permissionCode = `${module.toUpperCase()}:${permissionSuffix}`;
+  // Use underscore separator to match database permission codes (e.g., MACRO_READ)
+  const permissionCode = `${module.toUpperCase()}_${permissionSuffix}`;
 
   return authorize([permissionCode]);
 };

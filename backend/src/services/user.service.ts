@@ -356,4 +356,68 @@ export class UserService {
 
     return user;
   }
+
+
+  /**
+   * Create a new user (Admin only)
+   */
+  static async create(data: {
+    email: string;
+    password: string;
+    firstName: string;
+    lastName: string;
+    phone?: string;
+    roleId: string;
+    ministryId?: string;
+  }) {
+    // Check if email already exists
+    const existingUser = await prisma.user.findUnique({
+      where: { email: data.email },
+    });
+
+    if (existingUser) {
+      throw new BadRequestError('Un utilisateur avec cet email existe deja');
+    }
+
+    // Hash password
+    const hashedPassword = await bcrypt.hash(data.password, 10);
+
+    const user = await prisma.user.create({
+      data: {
+        email: data.email,
+        password: hashedPassword,
+        firstName: data.firstName,
+        lastName: data.lastName,
+        phone: data.phone,
+        roleId: data.roleId,
+        ministryId: data.ministryId || null,
+        isActive: true,
+      },
+      select: {
+        id: true,
+        email: true,
+        firstName: true,
+        lastName: true,
+        phone: true,
+        isActive: true,
+        createdAt: true,
+        role: {
+          select: {
+            id: true,
+            code: true,
+            name: true,
+          },
+        },
+        ministry: {
+          select: {
+            id: true,
+            code: true,
+            name: true,
+          },
+        },
+      },
+    });
+
+    return user;
+  }
 }

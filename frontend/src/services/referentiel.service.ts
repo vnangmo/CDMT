@@ -63,7 +63,7 @@ class ReferentielService {
 
   // === PROGRAMMES ===
   async getPrograms(): Promise<Program[]> {
-    const response = await api.get('/programs');
+    const response = await api.get('/programmatic-structure/programs');
     if (response.data.status === 'success') {
       return response.data.data.data;
     }
@@ -71,7 +71,7 @@ class ReferentielService {
   }
 
   async getProgram(id: string): Promise<Program> {
-    const response = await api.get(`/programs/${id}`);
+    const response = await api.get(`/programmatic-structure/programs/${id}`);
     if (response.data.status === 'success') {
       return response.data.data;
     }
@@ -79,7 +79,7 @@ class ReferentielService {
   }
 
   async createProgram(data: CreateProgramDto): Promise<Program> {
-    const response = await api.post('/programs', data);
+    const response = await api.post('/programmatic-structure/programs', data);
     if (response.data.status === 'success') {
       return response.data.data;
     }
@@ -87,7 +87,7 @@ class ReferentielService {
   }
 
   async updateProgram(id: string, data: UpdateProgramDto): Promise<Program> {
-    const response = await api.patch(`/programs/${id}`, data);
+    const response = await api.put(`/programmatic-structure/programs/${id}`, data);
     if (response.data.status === 'success') {
       return response.data.data;
     }
@@ -95,7 +95,7 @@ class ReferentielService {
   }
 
   async deleteProgram(id: string): Promise<void> {
-    const response = await api.delete(`/programs/${id}`);
+    const response = await api.delete(`/programmatic-structure/programs/${id}`);
     if (response.data.status !== 'success') {
       throw new Error(response.data.message || 'Erreur lors de la suppression du programme');
     }

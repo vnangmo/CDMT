@@ -1,0 +1,395 @@
+
+.historical-data-page {
+  padding: 24px;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.tabs-container {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 20px;
+  background: #f3f4f6;
+  padding: 4px;
+  border-radius: 8px;
+}
+
+.tab-btn {
+  flex: 1;
+  padding: 12px 20px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  color: #6b7280;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+}
+
+.tab-btn:hover {
+  background: rgba(255,255,255,0.5);
+}
+
+.tab-btn.active {
+  background: #fff;
+  color: #2563eb;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.year-selector-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 20px;
+  padding: 12px 16px;
+  background: #fff;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+}
+
+.year-selector-bar label {
+  font-size: 14px;
+  color: #6b7280;
+  font-weight: 500;
+}
+
+.year-selector-bar select {
+  padding: 8px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 14px;
+  background: #fff;
+}
+
+/* Base Data Section */
+.base-years-summary {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.base-year-summary-card {
+  background: #fff;
+  border-radius: 12px;
+  padding: 20px;
+  border: 2px solid #e5e7eb;
+  transition: all 0.2s ease;
+}
+
+.base-year-summary-card:hover {
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+.base-year-summary-card.n2 {
+  border-left: 4px solid #6366f1;
+}
+
+.base-year-summary-card.n1 {
+  border-left: 4px solid #f59e0b;
+}
+
+.base-year-summary-card.n {
+  border-left: 4px solid #10b981;
+}
+
+.summary-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.year-label {
+  font-size: 24px;
+  font-weight: 700;
+  color: #1f2937;
+}
+
+.year-value {
+  font-size: 18px;
+  font-weight: 600;
+  color: #3b82f6;
+}
+
+.summary-stats {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.stat-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px 0;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.stat-item:last-child {
+  border-bottom: none;
+}
+
+.stat-label {
+  color: #6b7280;
+  font-size: 13px;
+}
+
+.stat-value {
+  font-weight: 600;
+  color: #1f2937;
+}
+
+/* Data Table Section */
+.data-table-section {
+  background: #fff;
+  border-radius: 12px;
+  padding: 24px;
+  border: 1px solid #e5e7eb;
+}
+
+.data-table-section h3 {
+  margin: 0 0 20px 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: #1f2937;
+}
+
+/* Saisie Section */
+.saisie-section {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.saisie-info {
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  border-radius: 12px;
+  padding: 20px;
+}
+
+.saisie-info h3 {
+  margin: 0 0 12px 0;
+  color: #1e40af;
+}
+
+.saisie-info p {
+  margin: 0 0 12px 0;
+  color: #1e40af;
+}
+
+.saisie-info ul {
+  margin: 0;
+  padding-left: 20px;
+  color: #1e40af;
+}
+
+.quick-entry-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+}
+
+.quick-entry-card {
+  background: #fff;
+  border-radius: 12px;
+  padding: 20px;
+  text-align: center;
+  border: 1px solid #e5e7eb;
+}
+
+.quick-entry-card h4 {
+  margin: 0 0 8px 0;
+  color: #1f2937;
+}
+
+.quick-entry-card p {
+  margin: 0 0 16px 0;
+  color: #6b7280;
+  font-size: 14px;
+}
+
+/* Correction Section */
+.correction-section {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.correction-info {
+  background: #fef3c7;
+  border: 1px solid #fcd34d;
+  border-radius: 12px;
+  padding: 20px;
+}
+
+.correction-info h3 {
+  margin: 0 0 12px 0;
+  color: #92400e;
+}
+
+.correction-info p {
+  margin: 0;
+  color: #92400e;
+}
+
+.correction-stats {
+  display: flex;
+  gap: 16px;
+}
+
+.stat-card {
+  flex: 1;
+  padding: 20px;
+  border-radius: 12px;
+  text-align: center;
+}
+
+.stat-card.exceptional {
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+}
+
+.stat-card.temporary {
+  background: #fffbeb;
+  border: 1px solid #fde68a;
+}
+
+.stat-number {
+  display: block;
+  font-size: 32px;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+
+.stat-card.exceptional .stat-number {
+  color: #dc2626;
+}
+
+.stat-card.temporary .stat-number {
+  color: #d97706;
+}
+
+.stat-text {
+  color: #6b7280;
+  font-size: 14px;
+}
+
+/* Type Badge */
+.type-badge {
+  display: inline-block;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.type-badge.normal {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.type-badge.exceptional {
+  background: #fef2f2;
+  color: #dc2626;
+}
+
+.type-badge.temporary {
+  background: #fffbeb;
+  color: #d97706;
+}
+
+/* Form */
+.historical-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.historical-form .form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.historical-form .form-row.checkboxes {
+  display: flex;
+  gap: 24px;
+}
+
+.historical-form .form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.historical-form label {
+  font-size: 14px;
+  font-weight: 500;
+  color: #374151;
+}
+
+.historical-form input,
+.historical-form select,
+.historical-form textarea {
+  padding: 10px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 14px;
+}
+
+.historical-form input:focus,
+.historical-form select:focus,
+.historical-form textarea:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.historical-form .checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+}
+
+.historical-form .checkbox-label input {
+  width: 18px;
+  height: 18px;
+}
+
+
+/* Nature de depenses info badge */
+.nature-info {
+  margin-left: auto;
+  padding: 6px 12px;
+  background: #dbeafe;
+  color: #1e40af;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+@media (max-width: 768px) {
+  .historical-data-page {
+    padding: 16px;
+  }
+
+  .tabs-container {
+    flex-direction: column;
+  }
+
+  .base-years-summary,
+  .quick-entry-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .correction-stats {
+    flex-direction: column;
+  }
+
+  .historical-form .form-row {
+    grid-template-columns: 1fr;
+  }
+}

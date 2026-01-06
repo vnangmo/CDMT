@@ -20,9 +20,12 @@ import StrategicAxes from './pages/StrategicAxes';
 import EconomicNatures from './pages/EconomicNatures';
 import FundingSources from './pages/FundingSources';
 import FiscalYears from './pages/FiscalYears';
+import HistoricalData from './pages/HistoricalData';
 import MacroFrameworks from './pages/MacroFrameworks';
+import MacroProjections from './pages/MacroProjections';
 import RevenueProjections from './pages/RevenueProjections';
 import ExpenseProjections from './pages/ExpenseProjections';
+import TOFEList from './pages/TOFEList';
 import TOFEView from './pages/TOFEView';
 import CBMTList from './pages/CBMTList';
 import CBMTView from './pages/CBMTView';
@@ -31,13 +34,24 @@ import TrendBudgetDetail from './pages/TrendBudgetDetail';
 import CDMTGlobalScenarioList from './pages/CDMTGlobalScenarioList';
 import CDMTGlobalScenarioDetail from './pages/CDMTGlobalScenarioDetail';
 import CDMTGlobalScenarioComparison from './pages/CDMTGlobalScenarioComparison';
+import PolicyMeasures from './pages/PolicyMeasures';
+import FiscalMargin from './pages/FiscalMargin';
+import IntersectoralAllocation from './pages/IntersectoralAllocation';
+import SectoralTrends from './pages/SectoralTrends';
 import SectoralMeasures from './pages/SectoralMeasures';
 import SectoralMeasureDetail from './pages/SectoralMeasureDetail';
+import Projects from './pages/Projects';
 import ActionPlans from './pages/ActionPlans';
 import ActionPlanDetail from './pages/ActionPlanDetail';
 import SectoralMeasureValidation from './pages/SectoralMeasureValidation';
+import CDSMTSynthesis from './pages/CDSMTSynthesis';
 import MinisterialCeilings from './pages/MinisterialCeilings';
+import Nomenclatures from './pages/Nomenclatures';
+import VersionHistory from './pages/VersionHistory';
+import Comments from './pages/Comments';
 import Reports from './pages/Reports';
+import Exports from './pages/Exports';
+import Visualizations from './pages/Visualizations';
 import Analytics from './pages/Analytics';
 import UserProfile from './pages/UserProfile';
 import UserSettings from './pages/UserSettings';
@@ -163,40 +177,60 @@ function App() {
             <Route index element={<Navigate to="/dashboard" replace />} />
             <Route path="dashboard" element={<Dashboard />} />
 
-            {/* Referentials */}
-            <Route path="ministries" element={<Ministries />} />
-            <Route path="programs" element={<Programs />} />
-            <Route path="objectives" element={<Objectives />} />
-            <Route path="indicators" element={<Indicators />} />
-            <Route path="strategic-axes" element={<StrategicAxes />} />
-            <Route path="economic-natures" element={<EconomicNatures />} />
-            <Route path="funding-sources" element={<FundingSources />} />
-            <Route path="fiscal-years" element={<FiscalYears />} />
-
-            {/* Macro Module */}
+            {/* Module 1: Cadre Macro & CBMT */}
             <Route path="macro/frameworks" element={<MacroFrameworks />} />
+            <Route path="macro/projections" element={<MacroProjections />} />
             <Route path="macro/revenues/:macroFrameworkId" element={<RevenueProjections />} />
             <Route path="macro/expenses/:macroFrameworkId" element={<ExpenseProjections />} />
+            <Route path="macro/tofe" element={<TOFEList />} />
             <Route path="macro/tofe/:macroFrameworkId" element={<TOFEView />} />
             <Route path="macro/cbmt" element={<CBMTList />} />
             <Route path="macro/cbmt/:cbmtDocumentId" element={<CBMTView />} />
 
-            {/* Trend Budgets */}
-            <Route path="trend-budgets" element={<TrendBudgetList />} />
-            <Route path="trend-budgets/:configId" element={<TrendBudgetDetail />} />
-
-            {/* CDMT Global */}
+            {/* Module 2: CDMT Global */}
             <Route path="cdmt-global" element={<CDMTGlobalScenarioList />} />
             <Route path="cdmt-global/:scenarioId" element={<CDMTGlobalScenarioDetail />} />
             <Route path="cdmt-global/compare" element={<CDMTGlobalScenarioComparison />} />
+            <Route path="cdmt-global/policy-measures" element={<PolicyMeasures />} />
+            <Route path="cdmt-global/fiscal-margin" element={<FiscalMargin />} />
+            <Route path="cdmt-global/intersectoral" element={<IntersectoralAllocation />} />
             <Route path="ministerial-ceilings" element={<MinisterialCeilings />} />
 
-            {/* Sectoral */}
+            {/* Module 3: CDMT Sectoriels */}
+            <Route path="sectoral/trends" element={<SectoralTrends />} />
             <Route path="sectoral-measures" element={<SectoralMeasures />} />
             <Route path="sectoral-measures/:id" element={<SectoralMeasureDetail />} />
+            <Route path="projects" element={<Projects />} />
             <Route path="action-plans" element={<ActionPlans />} />
             <Route path="action-plans/:id" element={<ActionPlanDetail />} />
-            <Route path="sectoral-validation" element={<SectoralMeasureValidation />} />
+            <Route path="cdsmt-synthesis" element={<CDSMTSynthesis />} />
+
+            {/* Trend Budgets (legacy route) */}
+            <Route path="trend-budgets" element={<TrendBudgetList />} />
+            <Route path="trend-budgets/:configId" element={<TrendBudgetDetail />} />
+
+            {/* Module 4: Referentiels */}
+            <Route path="ministries" element={<Ministries />} />
+            <Route path="nomenclatures" element={<Nomenclatures />} />
+            <Route path="programs" element={<Programs />} />
+            <Route path="objectives" element={<Objectives />} />
+            <Route path="indicators" element={<Indicators />} />
+            <Route path="strategic-axes" element={<StrategicAxes />} />
+            <Route path="funding-sources" element={<FundingSources />} />
+            <Route path="economic-natures" element={<EconomicNatures />} />
+            <Route path="fiscal-years" element={<FiscalYears />} />
+            <Route path="historical-data" element={<HistoricalData />} />
+
+            {/* Module 5: Workflow & Validation */}
+            <Route path="workflow/validation" element={<SectoralMeasureValidation />} />
+            <Route path="workflow/versions" element={<VersionHistory />} />
+            <Route path="workflow/comments" element={<Comments />} />
+
+            {/* Module 6: Reporting */}
+            <Route path="reports" element={<Reports />} />
+            <Route path="exports" element={<Exports />} />
+            <Route path="visualizations" element={<Visualizations />} />
+            <Route path="analytics" element={<Analytics />} />
 
             {/* Administration */}
             <Route path="users" element={<Users />} />
@@ -208,10 +242,6 @@ function App() {
             <Route path="profile" element={<UserProfile />} />
             <Route path="user-settings" element={<UserSettings />} />
             <Route path="settings" element={<Settings />} />
-
-            {/* Reports and Analytics */}
-            <Route path="reports" element={<Reports />} />
-            <Route path="analytics" element={<Analytics />} />
           </Route>
 
           {/* Error Routes */}

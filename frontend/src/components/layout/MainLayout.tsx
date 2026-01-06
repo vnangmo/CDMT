@@ -12,16 +12,15 @@ import {
   Typography,
   Divider,
   IconButton,
-  ListItem,
   ListItemButton,
   ListItemIcon,
   ListItemText,
   Avatar,
   Menu,
-  MenuItem,
+  MenuItem as MuiMenuItem,
   TextField,
   InputAdornment,
-  Chip,
+  Collapse,
 } from '@mui/material';
 import {
   Dashboard as DashboardIcon,
@@ -29,7 +28,7 @@ import {
   Assignment as AssignmentIcon,
   TrendingUp as TrendingUpIcon,
   AttachMoney as MoneyIcon,
-  Source as SourceIcon,
+  AccountBalance as AccountBalanceIcon,
   CalendarToday as CalendarIcon,
   ShowChart as ChartIcon,
   Description as DocumentIcon,
@@ -38,22 +37,42 @@ import {
   CheckCircle as CheckIcon,
   People as PeopleIcon,
   Security as SecurityIcon,
-  GridOn as GridIcon,
   Search as SearchIcon,
   MoreVert as MoreVertIcon,
-  Notifications as NotificationsIcon,
   Settings as SettingsIcon,
   ExitToApp as LogoutIcon,
+  ExpandLess,
+  ExpandMore,
+  Public as MacroIcon,
+  AccountTree as ProgramIcon,
+  ListAlt as ListIcon,
+  History as HistoryIcon,
+  Comment as CommentIcon,
+  BarChart as BarChartIcon,
+  PieChart as PieChartIcon,
+  Download as DownloadIcon,
+  Category as CategoryIcon,
+  Folder as FolderIcon,
+  Calculate as CalculateIcon,
+  Tune as TuneIcon,
+  Assessment as AssessmentIcon,
 } from '@mui/icons-material';
 import './MainLayout.css';
 
-const drawerWidth = 240;
+const drawerWidth = 280;
 
-interface MenuItem {
+interface SidebarItem {
   path: string;
   label: string;
   icon: React.ReactNode;
-  section?: string;
+}
+
+interface SidebarModule {
+  key: string;
+  label: string;
+  icon: React.ReactNode;
+  color: string;
+  items: SidebarItem[];
 }
 
 const MainLayout: React.FC = () => {
@@ -62,6 +81,15 @@ const MainLayout: React.FC = () => {
   const { user, logout } = useAuth();
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [openModules, setOpenModules] = useState<Record<string, boolean>>({
+    module1: true,
+    module2: false,
+    module3: false,
+    module4: false,
+    module5: false,
+    module6: false,
+    module7: false,
+  });
 
   const handleMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorEl(event.currentTarget);
@@ -76,119 +104,118 @@ const MainLayout: React.FC = () => {
     navigate('/login');
   };
 
-  const menuItems: MenuItem[] = [
-    { path: '/dashboard', label: 'Tableau de Bord', icon: <DashboardIcon />, section: 'main' },
+  const handleModuleToggle = (moduleKey: string) => {
+    setOpenModules((prev) => ({
+      ...prev,
+      [moduleKey]: !prev[moduleKey],
+    }));
+  };
 
-    // Module 1: Gestion du Cadre Macroéconomique et CBMT
-    { path: '/macro/frameworks', label: 'Hypothèses Macro', icon: <ChartIcon />, section: 'module1' },
-    { path: '/macro/tofe/:id', label: 'TOFE Prévisionnel', icon: <TimelineIcon />, section: 'module1' },
-    { path: '/macro/cbmt', label: 'CBMT', icon: <DocumentIcon />, section: 'module1' },
-
-    // Module 2: Élaboration du CDMT Global
-    { path: '/trend-budgets', label: 'Budgets Tendanciels', icon: <EqualizerIcon />, section: 'module2' },
-    { path: '/cdmt-global', label: 'CDMT Global', icon: <TimelineIcon />, section: 'module2' },
-    { path: '/ministerial-ceilings', label: 'Plafonds Ministériels', icon: <MoneyIcon />, section: 'module2' },
-
-    // Module 3: Élaboration des CDMT Sectoriels
-    { path: '/programs', label: 'Structure Programmatique', icon: <AssignmentIcon />, section: 'module3' },
-    { path: '/action-plans', label: 'Plans d\'Action', icon: <AssignmentIcon />, section: 'module3' },
-    { path: '/sectoral-measures', label: 'Mesures Nouvelles', icon: <CheckIcon />, section: 'module3' },
-
-    // Module 4: Gestion des Référentiels
-    { path: '/ministries', label: 'Ministères', icon: <BusinessIcon />, section: 'module4' },
-    { path: '/strategic-axes', label: 'Axes Stratégiques', icon: <TrendingUpIcon />, section: 'module4' },
-    { path: '/economic-natures', label: 'Natures Économiques', icon: <MoneyIcon />, section: 'module4' },
-    { path: '/funding-sources', label: 'Sources Financement', icon: <SourceIcon />, section: 'module4' },
-    { path: '/fiscal-years', label: 'Années Fiscales', icon: <CalendarIcon />, section: 'module4' },
-
-    // Module 5: Workflow et Validation
-    { path: '/sectoral-validation', label: 'Circuit de Validation', icon: <CheckIcon />, section: 'module5' },
-    { path: '/roles', label: 'Rôles & Permissions', icon: <SecurityIcon />, section: 'module5' },
-    { path: '/access-matrix', label: 'Matrice des Droits', icon: <GridIcon />, section: 'module5' },
-
-    // Module 6: Reporting et Tableaux de Bord
-    { path: '/reports', label: 'Rapports', icon: <DocumentIcon />, section: 'module6' },
-    { path: '/analytics', label: 'Tableaux de Bord', icon: <EqualizerIcon />, section: 'module6' },
-    { path: '/users', label: 'Utilisateurs', icon: <PeopleIcon />, section: 'module6' },
+  // Structure des modules avec sous-menus
+  const modules: SidebarModule[] = [
+    {
+      key: 'module1',
+      label: 'Cadre Macro & CBMT',
+      icon: <MacroIcon />,
+      color: '#1976d2',
+      items: [
+        { path: '/macro/frameworks', label: 'Hypotheses macroeconomiques', icon: <ChartIcon fontSize="small" /> },
+        { path: '/macro/projections', label: 'Projections des agregats', icon: <TrendingUpIcon fontSize="small" /> },
+        { path: '/macro/tofe', label: 'TOFE previsionnel', icon: <DocumentIcon fontSize="small" /> },
+        { path: '/macro/cbmt', label: 'CBMT', icon: <AccountBalanceIcon fontSize="small" /> },
+      ],
+    },
+    {
+      key: 'module2',
+      label: 'CDMT Global',
+      icon: <TimelineIcon />,
+      color: '#2e7d32',
+      items: [
+        { path: '/cdmt-global', label: 'Scenarios CDMT', icon: <TimelineIcon fontSize="small" /> },
+        { path: '/cdmt-global/policy-measures', label: 'Mesures nouvelles centrales', icon: <TuneIcon fontSize="small" /> },
+        { path: '/cdmt-global/fiscal-margin', label: 'Marge de manoeuvre', icon: <EqualizerIcon fontSize="small" /> },
+        { path: '/cdmt-global/intersectoral', label: 'Repartition intersectorielle', icon: <PieChartIcon fontSize="small" /> },
+        { path: '/ministerial-ceilings', label: 'Plafonds ministeriels', icon: <MoneyIcon fontSize="small" /> },
+      ],
+    },
+    {
+      key: 'module3',
+      label: 'CDMT Sectoriels',
+      icon: <AssignmentIcon />,
+      color: '#ed6c02',
+      items: [
+        { path: '/sectoral/trends', label: 'Tendanciels sectoriels', icon: <TrendingUpIcon fontSize="small" /> },
+        { path: '/sectoral-measures', label: 'Mesures nouvelles', icon: <CheckIcon fontSize="small" /> },
+        { path: '/projects', label: 'Projets PIE/PIP', icon: <FolderIcon fontSize="small" /> },
+        { path: '/action-plans', label: 'Plans d\'action sectoriels', icon: <ListIcon fontSize="small" /> },
+        { path: '/cdsmt-synthesis', label: 'Synthese CDMT', icon: <AssessmentIcon fontSize="small" /> },
+      ],
+    },
+    {
+      key: 'module4',
+      label: 'Referentiels',
+      icon: <CategoryIcon />,
+      color: '#9c27b0',
+      items: [
+        { path: '/nomenclatures', label: 'Nomenclatures', icon: <ListIcon fontSize="small" /> },
+        { path: '/ministries', label: 'Ministeres et institutions', icon: <BusinessIcon fontSize="small" /> },
+        { path: '/economic-natures', label: 'Nature des depenses', icon: <MoneyIcon fontSize="small" /> },
+        { path: '/funding-sources', label: 'Sources de financement', icon: <AccountBalanceIcon fontSize="small" /> },
+        { path: '/fiscal-years', label: 'Annees fiscales', icon: <CalendarIcon fontSize="small" /> },
+        { path: '/historical-data', label: 'Donnees historiques', icon: <HistoryIcon fontSize="small" /> },
+      ],
+    },
+    {
+      key: 'module5',
+      label: 'Workflow & Validation',
+      icon: <CheckIcon />,
+      color: '#0288d1',
+      items: [
+        { path: '/workflow/validation', label: 'Circuit de validation', icon: <CheckIcon fontSize="small" /> },
+        { path: '/workflow/versions', label: 'Historique des versions', icon: <HistoryIcon fontSize="small" /> },
+        { path: '/workflow/comments', label: 'Commentaires', icon: <CommentIcon fontSize="small" /> },
+      ],
+    },
+    {
+      key: 'module6',
+      label: 'Reporting',
+      icon: <BarChartIcon />,
+      color: '#d32f2f',
+      items: [
+        { path: '/analytics', label: 'Tableaux de bord', icon: <EqualizerIcon fontSize="small" /> },
+        { path: '/reports', label: 'Rapports reglementaires', icon: <DocumentIcon fontSize="small" /> },
+        { path: '/exports', label: 'Exports personnalises', icon: <DownloadIcon fontSize="small" /> },
+        { path: '/visualizations', label: 'Visualisations', icon: <PieChartIcon fontSize="small" /> },
+      ],
+    },
+    {
+      key: 'module7',
+      label: 'Administration',
+      icon: <SettingsIcon />,
+      color: '#424242',
+      items: [
+        { path: '/users', label: 'Utilisateurs', icon: <PeopleIcon fontSize="small" /> },
+        { path: '/roles', label: 'Roles et permissions', icon: <SecurityIcon fontSize="small" /> },
+      ],
+    },
   ];
 
-  const sections = [
-    { key: 'main', label: '' },
-    { key: 'module1', label: 'CADRE MACRO & CBMT' },
-    { key: 'module2', label: 'CDMT GLOBAL' },
-    { key: 'module3', label: 'CDMT SECTORIELS' },
-    { key: 'module4', label: 'RÉFÉRENTIELS' },
-    { key: 'module5', label: 'WORKFLOW & VALIDATION' },
-    { key: 'module6', label: 'REPORTING' },
-  ];
+  // Vérifier si un sous-menu est actif
+  const isSubMenuActive = (path: string) => {
+    return location.pathname === path || location.pathname.startsWith(path + '/');
+  };
 
-  const renderMenuItems = () => {
-    return sections.map((section) => {
-      const items = menuItems.filter((item) => item.section === section.key);
-      if (items.length === 0) return null;
+  // Vérifier si un module contient un item actif
+  const isModuleActive = (items: SidebarItem[]) => {
+    return items.some((item) => isSubMenuActive(item.path));
+  };
 
-      return (
-        <React.Fragment key={section.key}>
-          {section.label && (
-            <ListItem sx={{ mt: 2 }}>
-              <Typography
-                variant="caption"
-                sx={{
-                  color: 'text.secondary',
-                  fontWeight: 600,
-                  fontSize: '0.75rem',
-                  letterSpacing: '0.05em',
-                  px: 2,
-                }}
-              >
-                {section.label}
-              </Typography>
-            </ListItem>
-          )}
-          {items.map((item) => {
-            const isActive = location.pathname === item.path || location.pathname.startsWith(item.path + '/');
-            return (
-              <ListItem key={item.path} disablePadding sx={{ px: 1 }}>
-                <ListItemButton
-                  onClick={() => navigate(item.path)}
-                  selected={isActive}
-                  sx={{
-                    borderRadius: 1,
-                    mb: 0.5,
-                    '&.Mui-selected': {
-                      backgroundColor: 'primary.main',
-                      color: 'white',
-                      '&:hover': {
-                        backgroundColor: 'primary.dark',
-                      },
-                      '& .MuiListItemIcon-root': {
-                        color: 'white',
-                      },
-                    },
-                  }}
-                >
-                  <ListItemIcon
-                    sx={{
-                      minWidth: 40,
-                      color: isActive ? 'white' : 'text.secondary',
-                    }}
-                  >
-                    {item.icon}
-                  </ListItemIcon>
-                  <ListItemText
-                    primary={item.label}
-                    primaryTypographyProps={{
-                      fontSize: '0.875rem',
-                      fontWeight: isActive ? 600 : 400,
-                    }}
-                  />
-                </ListItemButton>
-              </ListItem>
-            );
-          })}
-        </React.Fragment>
-      );
-    });
+  // Filtrer les items selon la recherche
+  const filterItems = (items: SidebarItem[]) => {
+    if (!searchQuery) return items;
+    return items.filter((item) =>
+      item.label.toLowerCase().includes(searchQuery.toLowerCase())
+    );
   };
 
   return (
@@ -203,7 +230,7 @@ const MainLayout: React.FC = () => {
             width: drawerWidth,
             boxSizing: 'border-box',
             borderRight: '1px solid #e0e0e0',
-            bgcolor: 'white',
+            bgcolor: '#1a1a2e',
           },
         }}
       >
@@ -214,27 +241,32 @@ const MainLayout: React.FC = () => {
             display: 'flex',
             alignItems: 'center',
             gap: 1.5,
-            borderBottom: '1px solid #e0e0e0',
+            borderBottom: '1px solid rgba(255,255,255,0.1)',
           }}
         >
           <Box
             sx={{
-              width: 36,
-              height: 36,
-              borderRadius: 1.5,
+              width: 40,
+              height: 40,
+              borderRadius: 2,
               bgcolor: 'primary.main',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
             }}
           >
-            <Typography variant="h6" sx={{ color: 'white', fontWeight: 700 }}>
+            <Typography variant="h5" sx={{ color: 'white', fontWeight: 700 }}>
               C
             </Typography>
           </Box>
-          <Typography variant="h6" sx={{ fontWeight: 700, color: 'text.primary' }}>
-            CDMT
-          </Typography>
+          <Box>
+            <Typography variant="h6" sx={{ fontWeight: 700, color: 'white', lineHeight: 1.2 }}>
+              CDMT
+            </Typography>
+            <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.6)' }}>
+              Djibouti
+            </Typography>
+          </Box>
         </Box>
 
         {/* Search */}
@@ -248,29 +280,198 @@ const MainLayout: React.FC = () => {
             InputProps={{
               startAdornment: (
                 <InputAdornment position="start">
-                  <SearchIcon fontSize="small" />
+                  <SearchIcon fontSize="small" sx={{ color: 'rgba(255,255,255,0.5)' }} />
                 </InputAdornment>
               ),
             }}
             sx={{
               '& .MuiOutlinedInput-root': {
-                borderRadius: 1.5,
-                bgcolor: '#f5f5f5',
+                borderRadius: 2,
+                bgcolor: 'rgba(255,255,255,0.05)',
+                color: 'white',
                 '& fieldset': {
-                  borderColor: 'transparent',
+                  borderColor: 'rgba(255,255,255,0.1)',
                 },
                 '&:hover fieldset': {
+                  borderColor: 'rgba(255,255,255,0.3)',
+                },
+                '&.Mui-focused fieldset': {
                   borderColor: 'primary.main',
                 },
+              },
+              '& .MuiInputBase-input::placeholder': {
+                color: 'rgba(255,255,255,0.5)',
               },
             }}
           />
         </Box>
 
-        {/* Menu Items */}
-        <List sx={{ flexGrow: 1, overflowY: 'auto', px: 1 }}>
-          {renderMenuItems()}
+        {/* Dashboard Link */}
+        <List sx={{ px: 1.5 }}>
+          <ListItemButton
+            onClick={() => navigate('/dashboard')}
+            selected={location.pathname === '/dashboard'}
+            sx={{
+              borderRadius: 2,
+              mb: 1,
+              color: 'rgba(255,255,255,0.8)',
+              '&:hover': {
+                bgcolor: 'rgba(255,255,255,0.1)',
+              },
+              '&.Mui-selected': {
+                bgcolor: 'primary.main',
+                color: 'white',
+                '&:hover': {
+                  bgcolor: 'primary.dark',
+                },
+              },
+            }}
+          >
+            <ListItemIcon sx={{ color: 'inherit', minWidth: 40 }}>
+              <DashboardIcon />
+            </ListItemIcon>
+            <ListItemText
+              primary="Tableau de Bord"
+              primaryTypographyProps={{ fontWeight: 500 }}
+            />
+          </ListItemButton>
         </List>
+
+        <Divider sx={{ borderColor: 'rgba(255,255,255,0.1)', mx: 2, my: 1 }} />
+
+        {/* Modules avec sous-menus */}
+        <List sx={{ flexGrow: 1, overflowY: 'auto', px: 1.5, py: 0 }}>
+          {modules.map((module) => {
+            const filteredItems = filterItems(module.items);
+            const moduleActive = isModuleActive(module.items);
+            const isOpen = openModules[module.key] || (searchQuery.length > 0 && filteredItems.length > 0);
+
+            if (searchQuery && filteredItems.length === 0) return null;
+
+            return (
+              <React.Fragment key={module.key}>
+                {/* Header du module */}
+                <ListItemButton
+                  onClick={() => handleModuleToggle(module.key)}
+                  sx={{
+                    borderRadius: 2,
+                    mb: 0.5,
+                    py: 1,
+                    color: moduleActive ? 'white' : 'rgba(255,255,255,0.7)',
+                    bgcolor: moduleActive ? 'rgba(255,255,255,0.08)' : 'transparent',
+                    '&:hover': {
+                      bgcolor: 'rgba(255,255,255,0.1)',
+                    },
+                  }}
+                >
+                  <ListItemIcon
+                    sx={{
+                      color: module.color,
+                      minWidth: 40,
+                    }}
+                  >
+                    {module.icon}
+                  </ListItemIcon>
+                  <ListItemText
+                    primary={module.label}
+                    primaryTypographyProps={{
+                      fontSize: '0.875rem',
+                      fontWeight: moduleActive ? 600 : 500,
+                    }}
+                  />
+                  {isOpen ? (
+                    <ExpandLess sx={{ color: 'rgba(255,255,255,0.5)' }} />
+                  ) : (
+                    <ExpandMore sx={{ color: 'rgba(255,255,255,0.5)' }} />
+                  )}
+                </ListItemButton>
+
+                {/* Sous-menus */}
+                <Collapse in={isOpen} timeout="auto" unmountOnExit>
+                  <List component="div" disablePadding sx={{ pl: 2 }}>
+                    {filteredItems.map((item) => {
+                      const isActive = isSubMenuActive(item.path);
+                      return (
+                        <ListItemButton
+                          key={item.path}
+                          onClick={() => navigate(item.path)}
+                          sx={{
+                            borderRadius: 1.5,
+                            mb: 0.25,
+                            py: 0.75,
+                            pl: 2,
+                            color: isActive ? 'white' : 'rgba(255,255,255,0.6)',
+                            bgcolor: isActive ? module.color : 'transparent',
+                            borderLeft: isActive ? 'none' : '2px solid transparent',
+                            '&:hover': {
+                              bgcolor: isActive ? module.color : 'rgba(255,255,255,0.05)',
+                              borderLeft: isActive ? 'none' : `2px solid ${module.color}`,
+                            },
+                          }}
+                        >
+                          <ListItemIcon
+                            sx={{
+                              color: isActive ? 'white' : 'rgba(255,255,255,0.5)',
+                              minWidth: 32,
+                            }}
+                          >
+                            {item.icon}
+                          </ListItemIcon>
+                          <ListItemText
+                            primary={item.label}
+                            primaryTypographyProps={{
+                              fontSize: '0.8rem',
+                              fontWeight: isActive ? 500 : 400,
+                            }}
+                          />
+                        </ListItemButton>
+                      );
+                    })}
+                  </List>
+                </Collapse>
+              </React.Fragment>
+            );
+          })}
+        </List>
+
+        {/* User info at bottom */}
+        <Box
+          sx={{
+            p: 2,
+            borderTop: '1px solid rgba(255,255,255,0.1)',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 1.5,
+          }}
+        >
+          <Avatar
+            sx={{
+              width: 36,
+              height: 36,
+              bgcolor: 'primary.main',
+              fontSize: '0.875rem',
+            }}
+          >
+            {user?.firstName?.[0]}{user?.lastName?.[0]}
+          </Avatar>
+          <Box sx={{ flexGrow: 1, overflow: 'hidden' }}>
+            <Typography
+              variant="body2"
+              sx={{ fontWeight: 600, color: 'white', lineHeight: 1.2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}
+            >
+              {user?.firstName} {user?.lastName}
+            </Typography>
+            <Typography
+              variant="caption"
+              sx={{ color: 'rgba(255,255,255,0.6)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', display: 'block' }}
+            >
+              {user?.role?.name}
+            </Typography>
+          </Box>
+          <IconButton size="small" sx={{ color: 'rgba(255,255,255,0.5)' }}>
+            <SettingsIcon fontSize="small" />
+          </IconButton>
+        </Box>
       </Drawer>
 
       {/* Main Content */}
@@ -286,7 +487,7 @@ const MainLayout: React.FC = () => {
         >
           <Toolbar>
             <Typography variant="h6" sx={{ flexGrow: 1, color: 'text.primary', fontWeight: 600 }}>
-              CDMT Djibouti
+              CDMT - Republique de Djibouti
             </Typography>
 
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
@@ -339,32 +540,32 @@ const MainLayout: React.FC = () => {
                 transformOrigin={{ horizontal: 'right', vertical: 'top' }}
                 anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
               >
-                <MenuItem onClick={() => { handleMenuClose(); navigate('/profile'); }}>
+                <MuiMenuItem onClick={() => { handleMenuClose(); navigate('/profile'); }}>
                   <ListItemIcon>
                     <PeopleIcon fontSize="small" />
                   </ListItemIcon>
                   Mon Profil
-                </MenuItem>
-                <MenuItem onClick={() => { handleMenuClose(); navigate('/user-settings'); }}>
+                </MuiMenuItem>
+                <MuiMenuItem onClick={() => { handleMenuClose(); navigate('/user-settings'); }}>
                   <ListItemIcon>
                     <SettingsIcon fontSize="small" />
                   </ListItemIcon>
-                  Paramètres Utilisateur
-                </MenuItem>
+                  Parametres Utilisateur
+                </MuiMenuItem>
                 <Divider />
-                <MenuItem onClick={() => { handleMenuClose(); navigate('/settings'); }}>
+                <MuiMenuItem onClick={() => { handleMenuClose(); navigate('/settings'); }}>
                   <ListItemIcon>
                     <SecurityIcon fontSize="small" />
                   </ListItemIcon>
-                  Paramètres Admin
-                </MenuItem>
+                  Parametres Admin
+                </MuiMenuItem>
                 <Divider />
-                <MenuItem onClick={handleLogout}>
+                <MuiMenuItem onClick={handleLogout}>
                   <ListItemIcon>
                     <LogoutIcon fontSize="small" />
                   </ListItemIcon>
-                  Déconnexion
-                </MenuItem>
+                  Deconnexion
+                </MuiMenuItem>
               </Menu>
             </Box>
           </Toolbar>

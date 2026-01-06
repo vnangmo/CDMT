@@ -157,8 +157,8 @@ const EconomicNatures: React.FC = () => {
   return (
     <div className="economic-natures-page">
       <PageHeader
-        title="Gestion des Natures Économiques"
-        subtitle="Classification économique - REQ-REF-01"
+        title="Nature des Depenses"
+        subtitle="Classification des depenses par nature economique - Modele CDMT"
         action={
           <Button
             onClick={handleCreate}
@@ -169,7 +169,7 @@ const EconomicNatures: React.FC = () => {
               </svg>
             }
           >
-            Nouvelle Nature Économique
+            Nouvelle Nature de Depense
           </Button>
         }
       />
@@ -187,7 +187,7 @@ const EconomicNatures: React.FC = () => {
       <Modal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
-        title={viewingNature ? 'Détails de la Nature Économique' : editingNature ? 'Modifier la Nature Économique' : 'Nouvelle Nature Économique'}
+        title={viewingNature ? 'Détails de la Nature Économique' : editingNature ? 'Modifier la Nature Économique' : 'Nouvelle Nature de Depense'}
         footer={
           viewingNature ? (
             <Button onClick={() => setIsModalOpen(false)}>

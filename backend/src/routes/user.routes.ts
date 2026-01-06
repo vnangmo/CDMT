@@ -8,6 +8,15 @@ const router = Router();
 router.use(authenticate);
 
 /**
+ * @route   POST /api/v1/users
+ * @desc    Create new user (Admin only)
+ * @access  Private - Admin
+ */
+router.post('/', authorizeRoles(['ADMIN']), UserController.create);
+
+
+
+/**
  * @route   GET /api/v1/users/me
  * @desc    Get current user profile
  * @access  Private

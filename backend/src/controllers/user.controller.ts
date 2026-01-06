@@ -236,4 +236,37 @@ export class UserController {
       next(error);
     }
   }
+
+
+  /**
+   * POST /api/v1/users
+   * Create a new user (Admin only)
+   */
+  static async create(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { email, password, firstName, lastName, phone, roleId, ministryId } = req.body;
+
+      if (!email || !password || !firstName || !lastName || !roleId) {
+        throw new BadRequestError('Email, mot de passe, prenom, nom et role sont requis');
+      }
+
+      const user = await UserService.create({
+        email,
+        password,
+        firstName,
+        lastName,
+        phone,
+        roleId,
+        ministryId,
+      });
+
+      res.status(201).json({
+        status: 'success',
+        message: 'Utilisateur cree avec succes',
+        data: user,
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
 }

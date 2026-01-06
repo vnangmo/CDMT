@@ -235,6 +235,7 @@ app.use(`${config.apiPrefix}/economic-categories`, economicCategoryRoutes);
 app.use(`${config.apiPrefix}/financing-sources`, financingSourceRoutes);
 app.use(`${config.apiPrefix}/functional-classifications`, functionalClassificationRoutes);
 app.use(`${config.apiPrefix}/programmatic-structure`, programRoutes);
+app.use(`${config.apiPrefix}/programs`, programRoutes);
 app.use(`${config.apiPrefix}/objectives`, objectiveRoutes);
 app.use(`${config.apiPrefix}/indicators`, indicatorRoutes);
 app.use(`${config.apiPrefix}/strategic-axes`, strategicAxisRoutes);
