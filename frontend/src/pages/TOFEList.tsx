@@ -49,7 +49,7 @@ const TOFEList: React.FC = () => {
     try {
       setLoading(true);
       const response = await apiClient.get('/macro-frameworks');
-      setFrameworks(response.data.data || []);
+      const data = response.data.data; const arr = Array.isArray(data) ? data : (data?.data || []); setFrameworks(arr);
     } catch (err: any) {
       setError(err.message || 'Erreur lors du chargement');
     } finally {

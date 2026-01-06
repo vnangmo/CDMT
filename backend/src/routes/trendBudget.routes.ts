@@ -20,6 +20,19 @@ router.get(
 );
 
 /**
+ * @route   GET /api/v1/trend-budgets/historical
+ * @desc    Obtenir TOUS les budgets historiques (sans configId)
+ * @access  Private (TREND_BUDGET:READ)
+ */
+router.get(
+  '/historical',
+  authenticate,
+  authorize(['TREND_BUDGET:READ', 'ADMIN:READ']),
+  TrendBudgetController.getAllHistoricalBudgets
+);
+
+
+/**
  * @route   GET /api/v1/trend-budgets/:id
  * @desc    Obtenir une configuration par ID
  * @access  Private (TREND_BUDGET:READ)
@@ -92,6 +105,18 @@ router.post(
 );
 
 // ===== HISTORICAL BUDGETS =====
+
+/**
+ * @route   GET /api/v1/trend-budgets/historical
+ * @desc    Obtenir TOUS les budgets historiques (sans configId)
+ * @access  Private (TREND_BUDGET:READ)
+ */
+router.get(
+  '/historical',
+  authenticate,
+  authorize(['TREND_BUDGET:READ', 'ADMIN:READ']),
+  TrendBudgetController.getAllHistoricalBudgets
+);
 
 /**
  * @route   GET /api/v1/trend-budgets/:configId/historical

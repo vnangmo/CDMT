@@ -174,6 +174,34 @@ export class TrendBudgetController {
     }
   }
 
+
+  /**
+   * Obtenir TOUS les budgets historiques (sans configId)
+   */
+  static async getAllHistoricalBudgets(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { ministryId, fiscalYear, isTemporary, isExceptional, page, limit } = req.query;
+
+      const filters = {
+        ministryId: ministryId as string | undefined,
+        fiscalYear: fiscalYear ? parseInt(fiscalYear as string, 10) : undefined,
+        isTemporary: isTemporary !== undefined ? isTemporary === 'true' : undefined,
+        isExceptional: isExceptional !== undefined ? isExceptional === 'true' : undefined,
+        page: page ? parseInt(page as string, 10) : undefined,
+        limit: limit ? parseInt(limit as string, 10) : undefined,
+      };
+
+      const result = await TrendBudgetService.getAllHistoricalBudgets(filters);
+
+      res.status(200).json({
+        status: 'success',
+        data: result,
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+
   /**
    * Créer un budget historique
    */

@@ -49,7 +49,7 @@ const PolicyMeasures: React.FC = () => {
       setLoading(true);
       // Try to fetch policy measures if endpoint exists
       const response = await apiClient.get('/cdmt-global/policy-measures').catch(() => ({ data: { data: [] } }));
-      setMeasures(response.data.data || []);
+      const resData = response.data.data; setMeasures(Array.isArray(resData) ? resData : (resData?.data || []));
     } catch (err: any) {
       console.log('No policy measures endpoint available');
     } finally {

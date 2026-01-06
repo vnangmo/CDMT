@@ -1,0 +1,161 @@
+.alert-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+  animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: scale(0.9) translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.alert-modal-container {
+  background: white;
+  border-radius: 16px;
+  padding: 32px;
+  max-width: 400px;
+  width: 90%;
+  text-align: center;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  animation: slideIn 0.3s ease;
+}
+
+.alert-modal-icon {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 20px;
+}
+
+.alert-modal-icon svg {
+  width: 32px;
+  height: 32px;
+}
+
+.alert-icon-info {
+  background: #e0f2fe;
+  color: #0284c7;
+}
+
+.alert-icon-success {
+  background: #dcfce7;
+  color: #16a34a;
+}
+
+.alert-icon-warning,
+.alert-icon-confirm {
+  background: #fef3c7;
+  color: #d97706;
+}
+
+.alert-icon-error {
+  background: #fee2e2;
+  color: #dc2626;
+}
+
+.alert-modal-title {
+  margin: 0 0 12px;
+  font-size: 20px;
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.alert-modal-message {
+  margin: 0 0 24px;
+  font-size: 15px;
+  color: #6b7280;
+  line-height: 1.5;
+}
+
+.alert-modal-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+}
+
+.alert-btn {
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: none;
+  min-width: 100px;
+}
+
+.alert-btn-cancel {
+  background: #f3f4f6;
+  color: #374151;
+}
+
+.alert-btn-cancel:hover {
+  background: #e5e7eb;
+}
+
+.alert-btn-info {
+  background: #0284c7;
+  color: white;
+}
+
+.alert-btn-info:hover {
+  background: #0369a1;
+}
+
+.alert-btn-success {
+  background: #16a34a;
+  color: white;
+}
+
+.alert-btn-success:hover {
+  background: #15803d;
+}
+
+.alert-btn-warning {
+  background: #d97706;
+  color: white;
+}
+
+.alert-btn-warning:hover {
+  background: #b45309;
+}
+
+.alert-btn-error {
+  background: #dc2626;
+  color: white;
+}
+
+.alert-btn-error:hover {
+  background: #b91c1c;
+}
+
+.alert-btn-confirm {
+  background: #2563eb;
+  color: white;
+}
+
+.alert-btn-confirm:hover {
+  background: #1d4ed8;
+}

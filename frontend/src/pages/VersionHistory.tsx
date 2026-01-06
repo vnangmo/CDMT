@@ -55,7 +55,7 @@ const VersionHistory: React.FC = () => {
       setLoading(true);
       // Attempt to load document versions if endpoint exists
       const response = await apiClient.get('/document-versions?limit=100').catch(() => ({ data: { data: [] } }));
-      setVersions(response.data.data || []);
+      const resData = response.data.data; setVersions(Array.isArray(resData) ? resData : (resData?.data || []));
     } catch (err: any) {
       console.log('Versions endpoint not available');
     } finally {

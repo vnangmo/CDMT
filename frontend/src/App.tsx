@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
 import { AuthProvider } from './contexts/AuthContext';
+import { AlertProvider } from './contexts/AlertContext';
 import MainLayout from './components/layout/MainLayout';
 import Login from './pages/Login';
 import './i18n/config';
@@ -162,6 +163,7 @@ function App() {
       <CssBaseline />
       <Router>
         <AuthProvider>
+          <AlertProvider>
           <Routes>
             <Route path="/login" element={<Login />} />
 
@@ -187,7 +189,13 @@ function App() {
             <Route path="macro/cbmt" element={<CBMTList />} />
             <Route path="macro/cbmt/:cbmtDocumentId" element={<CBMTView />} />
 
-            {/* Module 2: CDMT Global */}
+            {/* Module 2: CBMT */}
+            <Route path="cbmt" element={<CBMTList />} />
+            <Route path="cbmt/:cbmtDocumentId" element={<CBMTView />} />
+            <Route path="cbmt/aggregates" element={<CBMTList />} />
+            <Route path="cbmt/tables" element={<CBMTList />} />
+
+            {/* Module 3: CDMT Global */}
             <Route path="cdmt-global" element={<CDMTGlobalScenarioList />} />
             <Route path="cdmt-global/:scenarioId" element={<CDMTGlobalScenarioDetail />} />
             <Route path="cdmt-global/compare" element={<CDMTGlobalScenarioComparison />} />
@@ -196,7 +204,7 @@ function App() {
             <Route path="cdmt-global/intersectoral" element={<IntersectoralAllocation />} />
             <Route path="ministerial-ceilings" element={<MinisterialCeilings />} />
 
-            {/* Module 3: CDMT Sectoriels */}
+            {/* Module 4: CDMT Sectoriels */}
             <Route path="sectoral/trends" element={<SectoralTrends />} />
             <Route path="sectoral-measures" element={<SectoralMeasures />} />
             <Route path="sectoral-measures/:id" element={<SectoralMeasureDetail />} />
@@ -209,7 +217,7 @@ function App() {
             <Route path="trend-budgets" element={<TrendBudgetList />} />
             <Route path="trend-budgets/:configId" element={<TrendBudgetDetail />} />
 
-            {/* Module 4: Referentiels */}
+            {/* Module 5: Referentiels */}
             <Route path="ministries" element={<Ministries />} />
             <Route path="nomenclatures" element={<Nomenclatures />} />
             <Route path="programs" element={<Programs />} />
@@ -221,12 +229,12 @@ function App() {
             <Route path="fiscal-years" element={<FiscalYears />} />
             <Route path="historical-data" element={<HistoricalData />} />
 
-            {/* Module 5: Workflow & Validation */}
+            {/* Module 6: Workflow & Validation */}
             <Route path="workflow/validation" element={<SectoralMeasureValidation />} />
             <Route path="workflow/versions" element={<VersionHistory />} />
             <Route path="workflow/comments" element={<Comments />} />
 
-            {/* Module 6: Reporting */}
+            {/* Module 7: Reporting */}
             <Route path="reports" element={<Reports />} />
             <Route path="exports" element={<Exports />} />
             <Route path="visualizations" element={<Visualizations />} />
@@ -279,6 +287,7 @@ function App() {
             }
           />
           </Routes>
+        </AlertProvider>
         </AuthProvider>
       </Router>
     </ThemeProvider>

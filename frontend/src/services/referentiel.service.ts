@@ -47,7 +47,7 @@ class ReferentielService {
   }
 
   async updateMinistry(id: string, data: UpdateMinistryDto): Promise<Ministry> {
-    const response = await api.patch(`/ministries/${id}`, data);
+    const response = await api.put(`/ministries/${id}`, data);
     if (response.data.status === 'success') {
       return response.data.data;
     }
@@ -63,7 +63,7 @@ class ReferentielService {
 
   // === PROGRAMMES ===
   async getPrograms(): Promise<Program[]> {
-    const response = await api.get('/programmatic-structure/programs');
+    const response = await api.get('/programmatic-structure/programs?isActive=true');
     if (response.data.status === 'success') {
       return response.data.data.data;
     }
@@ -127,7 +127,7 @@ class ReferentielService {
   }
 
   async updateStrategicAxis(id: string, data: UpdateStrategicAxisDto): Promise<StrategicAxis> {
-    const response = await api.patch(`/strategic-axes/${id}`, data);
+    const response = await api.put(`/strategic-axes/${id}`, data);
     if (response.data.status === 'success') {
       return response.data.data;
     }
@@ -167,7 +167,7 @@ class ReferentielService {
   }
 
   async updateEconomicNature(id: string, data: UpdateEconomicNatureDto): Promise<EconomicNature> {
-    const response = await api.patch(`/economic-natures/${id}`, data);
+    const response = await api.put(`/economic-natures/${id}`, data);
     if (response.data.status === 'success') {
       return response.data.data;
     }
@@ -207,7 +207,7 @@ class ReferentielService {
   }
 
   async updateFundingSource(id: string, data: UpdateFundingSourceDto): Promise<FundingSource> {
-    const response = await api.patch(`/funding-sources/${id}`, data);
+    const response = await api.put(`/funding-sources/${id}`, data);
     if (response.data.status === 'success') {
       return response.data.data;
     }
@@ -247,7 +247,7 @@ class ReferentielService {
   }
 
   async updateFiscalYear(id: string, data: UpdateFiscalYearDto): Promise<FiscalYear> {
-    const response = await api.patch(`/fiscal-years/${id}`, data);
+    const response = await api.put(`/fiscal-years/${id}`, data);
     if (response.data.status === 'success') {
       return response.data.data;
     }

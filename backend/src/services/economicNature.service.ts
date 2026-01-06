@@ -39,8 +39,11 @@ export class EconomicNatureService {
 
     const where: any = {};
 
+    // Par défaut, ne retourner que les éléments actifs
     if (isActive !== undefined) {
       where.isActive = isActive;
+    } else {
+      where.isActive = true; // Filtre par défaut
     }
 
     if (type) {

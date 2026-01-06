@@ -44,7 +44,7 @@ import {
   ExpandLess,
   ExpandMore,
   Public as MacroIcon,
-  AccountTree as ProgramIcon,
+  
   ListAlt as ListIcon,
   History as HistoryIcon,
   Comment as CommentIcon,
@@ -82,13 +82,14 @@ const MainLayout: React.FC = () => {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [openModules, setOpenModules] = useState<Record<string, boolean>>({
-    module1: true,
-    module2: false,
-    module3: false,
-    module4: false,
-    module5: false,
-    module6: false,
-    module7: false,
+    macro: true,
+    cbmt: false,
+    cdmtGlobal: false,
+    cdmtSectoral: false,
+    referentiels: false,
+    workflow: false,
+    reporting: false,
+    admin: false,
   });
 
   const handleMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
@@ -114,19 +115,29 @@ const MainLayout: React.FC = () => {
   // Structure des modules avec sous-menus
   const modules: SidebarModule[] = [
     {
-      key: 'module1',
-      label: 'Cadre Macro & CBMT',
+      key: 'macro',
+      label: 'Cadre Macroeconomique',
       icon: <MacroIcon />,
       color: '#1976d2',
       items: [
         { path: '/macro/frameworks', label: 'Hypotheses macroeconomiques', icon: <ChartIcon fontSize="small" /> },
-        { path: '/macro/projections', label: 'Projections des agregats', icon: <TrendingUpIcon fontSize="small" /> },
+        { path: '/macro/projections', label: 'Projections macro', icon: <TrendingUpIcon fontSize="small" /> },
         { path: '/macro/tofe', label: 'TOFE previsionnel', icon: <DocumentIcon fontSize="small" /> },
-        { path: '/macro/cbmt', label: 'CBMT', icon: <AccountBalanceIcon fontSize="small" /> },
       ],
     },
     {
-      key: 'module2',
+      key: 'cbmt',
+      label: 'CBMT',
+      icon: <AccountBalanceIcon />,
+      color: '#0d47a1',
+      items: [
+        { path: '/cbmt', label: 'Elaboration CBMT', icon: <AccountBalanceIcon fontSize="small" /> },
+        { path: '/cbmt/aggregates', label: 'Agregats par nature', icon: <CalculateIcon fontSize="small" /> },
+        { path: '/cbmt/tables', label: 'Tableaux CBMT', icon: <DocumentIcon fontSize="small" /> },
+      ],
+    },
+    {
+      key: 'cdmtGlobal',
       label: 'CDMT Global',
       icon: <TimelineIcon />,
       color: '#2e7d32',
@@ -139,7 +150,7 @@ const MainLayout: React.FC = () => {
       ],
     },
     {
-      key: 'module3',
+      key: 'cdmtSectoral',
       label: 'CDMT Sectoriels',
       icon: <AssignmentIcon />,
       color: '#ed6c02',
@@ -147,12 +158,12 @@ const MainLayout: React.FC = () => {
         { path: '/sectoral/trends', label: 'Tendanciels sectoriels', icon: <TrendingUpIcon fontSize="small" /> },
         { path: '/sectoral-measures', label: 'Mesures nouvelles', icon: <CheckIcon fontSize="small" /> },
         { path: '/projects', label: 'Projets PIE/PIP', icon: <FolderIcon fontSize="small" /> },
-        { path: '/action-plans', label: 'Plans d\'action sectoriels', icon: <ListIcon fontSize="small" /> },
+        { path: '/action-plans', label: 'Plans d action sectoriels', icon: <ListIcon fontSize="small" /> },
         { path: '/cdsmt-synthesis', label: 'Synthese CDMT', icon: <AssessmentIcon fontSize="small" /> },
       ],
     },
     {
-      key: 'module4',
+      key: 'referentiels',
       label: 'Referentiels',
       icon: <CategoryIcon />,
       color: '#9c27b0',
@@ -166,7 +177,7 @@ const MainLayout: React.FC = () => {
       ],
     },
     {
-      key: 'module5',
+      key: 'workflow',
       label: 'Workflow & Validation',
       icon: <CheckIcon />,
       color: '#0288d1',
@@ -177,7 +188,7 @@ const MainLayout: React.FC = () => {
       ],
     },
     {
-      key: 'module6',
+      key: 'reporting',
       label: 'Reporting',
       icon: <BarChartIcon />,
       color: '#d32f2f',
@@ -189,7 +200,7 @@ const MainLayout: React.FC = () => {
       ],
     },
     {
-      key: 'module7',
+      key: 'admin',
       label: 'Administration',
       icon: <SettingsIcon />,
       color: '#424242',

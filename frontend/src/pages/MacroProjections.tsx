@@ -54,7 +54,10 @@ const MacroProjections: React.FC = () => {
     try {
       setLoading(true);
       const response = await apiClient.get('/macro-frameworks');
-      setFrameworks(response.data.data || []);
+      // Handle both response formats: { data: [...] } or { data: { data: [...], pagination: {...} } }
+      const data = response.data.data;
+      const frameworksArray = Array.isArray(data) ? data : (data?.data || []);
+      setFrameworks(frameworksArray);
     } catch (err: any) {
       setError(err.message || 'Erreur lors du chargement des donnees');
     } finally {

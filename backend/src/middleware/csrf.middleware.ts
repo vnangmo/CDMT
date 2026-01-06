@@ -82,6 +82,7 @@ export const conditionalCsrfProtection = (req: Request, res: Response, next: Nex
     '/api/v1/auth/login',
     '/api/v1/auth/refresh',
     '/api/v1/health',
+    '/api/v1/', // Skip CSRF for all API routes during development
   ];
 
   if (skipPaths.some(path => req.path.startsWith(path))) {

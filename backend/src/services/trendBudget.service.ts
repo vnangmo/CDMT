@@ -350,6 +350,91 @@ export class TrendBudgetService {
     };
   }
 
+
+  /**
+   * Obtenir TOUS les budgets historiques (sans configId requis)
+   */
+  static async getAllHistoricalBudgets(
+    filters?: {
+      ministryId?: string;
+      fiscalYear?: number;
+      isTemporary?: boolean;
+      isExceptional?: boolean;
+      page?: number;
+      limit?: number;
+    }
+  ): Promise<{
+    data: any[];
+    pagination: {
+      page: number;
+      limit: number;
+      totalItems: number;
+      totalPages: number;
+    };
+  }> {
+    const page = filters?.page || 1;
+    const limit = filters?.limit || 500;
+    const skip = (page - 1) * limit;
+
+    const where: any = {};
+    if (filters?.ministryId) where.ministryId = filters.ministryId;
+    if (filters?.fiscalYear) where.fiscalYear = filters.fiscalYear;
+    if (filters?.isTemporary !== undefined) where.isTemporary = filters.isTemporary;
+    if (filters?.isExceptional !== undefined) where.isExceptional = filters.isExceptional;
+
+    const [data, totalItems] = await Promise.all([
+      prisma.historicalBudget.findMany({
+        where,
+        skip,
+        take: limit,
+        orderBy: [{ fiscalYear: 'desc' }, { ministryId: 'asc' }],
+        include: {
+          ministry: {
+            select: {
+              id: true,
+              code: true,
+              name: true,
+              isPriority: true,
+            },
+          },
+          program: {
+            select: {
+              id: true,
+              code: true,
+              name: true,
+            },
+          },
+          economicNature: {
+            select: {
+              id: true,
+              code: true,
+              name: true,
+              type: true,
+            },
+          },
+          fundingSource: {
+            select: {
+              id: true,
+              code: true,
+              name: true,
+            },
+          },
+        },
+      }),
+      prisma.historicalBudget.count({ where }),
+    ]);
+
+    return {
+      data,
+      pagination: {
+        page,
+        limit,
+        totalItems,
+        totalPages: Math.ceil(totalItems / limit),
+      },
+    };
+  }
+
   /**
    * Créer un budget historique manuellement
    */
@@ -409,9 +494,12 @@ export class TrendBudgetService {
   static async updateHistoricalBudget(
     id: string,
     data: {
+      economicNatureId?: string;
       budgetAmount?: number;
       executedAmount?: number;
       isTemporary?: boolean;
+      isExceptional?: boolean;
+      exceptionalReason?: string;
       notes?: string;
     }
   ): Promise<any> {

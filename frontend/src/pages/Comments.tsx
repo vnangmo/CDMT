@@ -56,7 +56,7 @@ const Comments: React.FC = () => {
     try {
       setLoading(true);
       const response = await apiClient.get('/comments?limit=100').catch(() => ({ data: { data: [] } }));
-      setComments(response.data.data || []);
+      const resData = response.data.data; setComments(Array.isArray(resData) ? resData : (resData?.data || []));
     } catch (err: any) {
       console.log('Comments endpoint not available');
     } finally {

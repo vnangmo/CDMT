@@ -55,20 +55,39 @@ interface BaseYearData {
   count: number;
 }
 
+interface HistoricalConstraints {
+  projections: number;
+  usedInCalculations: boolean;
+}
+
 type TabType = 'saisie' | 'base' | 'correction';
 
 const HistoricalData: React.FC = () => {
   const [activeTab, setActiveTab] = useState<TabType>('base');
   const [loading, setLoading] = useState(true);
+  const [trendConfigId, setTrendConfigId] = useState<string>('');
   const [ministries, setMinistries] = useState<Ministry[]>([]);
   const [programs, setPrograms] = useState<Program[]>([]);
   const [economicNatures, setEconomicNatures] = useState<EconomicNature[]>([]);
   const [historicalData, setHistoricalData] = useState<HistoricalBudget[]>([]);
-  const [baseYear, setBaseYear] = useState<number>(new Date().getFullYear());
+  const [baseYear, setBaseYear] = useState<number>(2025);
   const [selectedMinistry, setSelectedMinistry] = useState<string>('');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<HistoricalBudget | null>(null);
   const [submitting, setSubmitting] = useState(false);
+
+  const [filterMinistryId, setFilterMinistryId] = useState<string>('');
+  const [filterFiscalYear, setFilterFiscalYear] = useState<string>('');
+
+  const [deleteDialog, setDeleteDialog] = useState<{
+    open: boolean;
+    item: HistoricalBudget | null;
+    loading: boolean;
+    error: string | null;
+    constraints: HistoricalConstraints | null;
+  }>({ open: false, item: null, loading: false, error: null, constraints: null });
+
+  const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
   const [formData, setFormData] = useState({
     ministryId: '',
@@ -107,23 +126,39 @@ const HistoricalData: React.FC = () => {
     return economicNatures.filter(n => n.type === 'EXPENSE');
   }, [economicNatures]);
 
+  const ministriesFromHistoricalData = useMemo(() => {
+    const ministryMap = new Map<string, Ministry>();
+    historicalData.forEach(h => {
+      if (h.ministry && !ministryMap.has(h.ministryId)) {
+        ministryMap.set(h.ministryId, h.ministry);
+      }
+    });
+    return Array.from(ministryMap.values()).sort((a, b) => a.code.localeCompare(b.code));
+  }, [historicalData]);
+
   useEffect(() => { loadData(); }, []);
 
   useEffect(() => {
-    if (selectedMinistry) { loadPrograms(selectedMinistry); }
-  }, [selectedMinistry]);
+    if (message) {
+      const timer = setTimeout(() => setMessage(null), 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [message]);
 
   const loadData = async () => {
     try {
       setLoading(true);
-      const [ministriesRes, economicNaturesRes, historicalRes] = await Promise.all([
+      const [ministriesRes, economicNaturesRes, historicalRes, configRes] = await Promise.all([
         apiClient.get('/ministries?limit=100'),
         apiClient.get('/economic-natures?limit=100'),
-        apiClient.get('/trend-budgets/historical?limit=500')
+        apiClient.get('/trend-budgets/historical?limit=500'),
+        apiClient.get('/trend-budgets?limit=1')
       ]);
       setMinistries(ministriesRes.data.data?.data || ministriesRes.data.data || []);
       setEconomicNatures(economicNaturesRes.data.data?.data || economicNaturesRes.data.data || []);
       setHistoricalData(historicalRes.data.data?.data || historicalRes.data.data || []);
+      const configs = configRes.data.data?.data || configRes.data.data || [];
+      if (configs.length > 0) setTrendConfigId(configs[0].id);
     } catch (error) {
       console.error('Erreur chargement:', error);
     } finally {
@@ -176,31 +211,66 @@ const HistoricalData: React.FC = () => {
   };
 
   const handleDelete = async (item: HistoricalBudget) => {
-    if (window.confirm('Supprimer cette donnee historique ?')) {
-      try {
-        await apiClient.delete(`/trend-budgets/historical/${item.id}`);
-        await loadData();
-      } catch (error) {
-        console.error('Erreur suppression:', error);
-        alert('Erreur lors de la suppression');
-      }
+    setDeleteDialog({ open: true, item, loading: true, error: null, constraints: null });
+
+    try {
+      // Check if data is used in projections or calculations
+      const projectionsRes = await apiClient.get(`/trend-budgets/projections?historicalId=${item.id}&limit=1`).catch(() => ({ data: { data: { total: 0 } } }));
+
+      const constraints: HistoricalConstraints = {
+        projections: projectionsRes.data.data?.pagination?.total || projectionsRes.data.data?.data?.length || 0,
+        usedInCalculations: !item.isExceptional && !item.isTemporary // Normal data is used in calculations
+      };
+
+      setDeleteDialog(prev => ({ ...prev, loading: false, constraints }));
+    } catch (error) {
+      setDeleteDialog(prev => ({ ...prev, loading: false, constraints: { projections: 0, usedInCalculations: false } }));
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const confirmDelete = async () => {
+    if (!deleteDialog.item) return;
+    setDeleteDialog(prev => ({ ...prev, loading: true, error: null }));
+
+    try {
+      await apiClient.delete(`/trend-budgets/historical/${deleteDialog.item.id}`);
+      setMessage({ type: 'success', text: 'Donnee historique supprimee avec succes' });
+      setDeleteDialog({ open: false, item: null, loading: false, error: null, constraints: null });
+      await loadData();
+    } catch (error: any) {
+      const msg = error.response?.data?.message || 'Erreur lors de la suppression';
+      setDeleteDialog(prev => ({ ...prev, loading: false, error: msg }));
+    }
+  };
+
+  const hasConstraints = (): boolean => {
+    const c = deleteDialog.constraints;
+    return !!(c && (c.projections > 0 || c.usedInCalculations));
+  };
+
+  const handleSubmit = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
     setSubmitting(true);
     try {
       if (editingItem) {
-        await apiClient.put(`/trend-budgets/historical/${editingItem.id}`, formData);
+        await apiClient.put(`/trend-budgets/historical/${editingItem.id}`, {
+          economicNatureId: formData.economicNatureId || undefined,
+          budgetAmount: formData.budgetAmount,
+          executedAmount: formData.executedAmount,
+          isTemporary: formData.isTemporary,
+          isExceptional: formData.isExceptional,
+          exceptionalReason: formData.exceptionalReason,
+          notes: formData.notes
+        });
+        setMessage({ type: 'success', text: 'Donnee historique mise a jour avec succes' });
       } else {
-        await apiClient.post('/trend-budgets/historical', formData);
+        await apiClient.post('/trend-budgets/historical', { ...formData, trendConfigId });
+        setMessage({ type: 'success', text: 'Donnee historique creee avec succes' });
       }
       setIsModalOpen(false);
       await loadData();
-    } catch (error) {
-      console.error('Erreur soumission:', error);
-      alert('Erreur lors de enregistrement');
+    } catch (error: any) {
+      setMessage({ type: 'error', text: error.response?.data?.message || 'Erreur lors de l\'enregistrement' });
     } finally {
       setSubmitting(false);
     }
@@ -211,21 +281,32 @@ const HistoricalData: React.FC = () => {
   };
 
   const filteredData = useMemo(() => {
-    const baseYearValues = baseYears.map(b => b.year);
-    return historicalData.filter(h => baseYearValues.includes(h.fiscalYear));
-  }, [historicalData, baseYears]);
+    let data = historicalData;
+
+    if (filterFiscalYear) {
+      data = data.filter(h => h.fiscalYear === parseInt(filterFiscalYear));
+    } else {
+      const baseYearValues = baseYears.map(b => b.year);
+      data = data.filter(h => baseYearValues.includes(h.fiscalYear));
+    }
+
+    if (filterMinistryId) {
+      data = data.filter(h => h.ministryId === filterMinistryId);
+    }
+
+    return data;
+  }, [historicalData, baseYears, filterFiscalYear, filterMinistryId]);
 
   const correctionData = useMemo(() => {
     return historicalData.filter(h => h.isExceptional || h.isTemporary);
   }, [historicalData]);
 
   const columns: Column<HistoricalBudget>[] = [
-    { key: 'fiscalYear', header: 'Annee', width: '8%', render: (item) => <strong>{item.fiscalYear}</strong> },
-    { key: 'ministry', header: 'Ministere', width: '12%', render: (item) => item.ministry?.code || '-' },
-    { key: 'program', header: 'Programme', width: '10%', render: (item) => item.program?.code || '-' },
-    { key: 'economicNature', header: 'Nature Depense', width: '20%', render: (item) => item.economicNature ? `${item.economicNature.code} - ${item.economicNature.name}` : '-' },
-    { key: 'budgetAmount', header: 'Budget (M FDJ)', width: '12%', render: (item) => formatAmount(item.budgetAmount) },
-    { key: 'executedAmount', header: 'Execute (M FDJ)', width: '12%', render: (item) => formatAmount(item.executedAmount || 0) },
+    { key: 'fiscalYear', header: 'Annee', width: '10%', render: (item) => <strong>{item.fiscalYear}</strong> },
+    { key: 'ministry', header: 'Ministere', width: '15%', render: (item) => item.ministry?.code || '-' },
+    { key: 'economicNature', header: 'Nature de la Depense', width: '25%', render: (item) => item.economicNature?.name || '-' },
+    { key: 'budgetAmount', header: 'Total Depense (M FDJ)', width: '15%', render: (item) => formatAmount(item.budgetAmount) },
+    { key: 'executedAmount', header: 'Execute (M FDJ)', width: '15%', render: (item) => formatAmount(item.executedAmount || 0) },
     { key: 'isExceptional', header: 'Type', width: '10%', render: (item) => (
       <span className={`type-badge ${item.isExceptional ? 'exceptional' : item.isTemporary ? 'temporary' : 'normal'}`}>
         {item.isExceptional ? 'Except.' : item.isTemporary ? 'Temp.' : 'Normal'}
@@ -245,6 +326,13 @@ const HistoricalData: React.FC = () => {
         }
       />
 
+      {message && (
+        <div className={`message-banner ${message.type}`}>
+          {message.text}
+          <button onClick={() => setMessage(null)} className="close-btn">&times;</button>
+        </div>
+      )}
+
       <div className="tabs-container">
         <button className={`tab-btn ${activeTab === 'saisie' ? 'active' : ''}`} onClick={() => setActiveTab('saisie')}>Saisie Donnees Historiques</button>
         <button className={`tab-btn ${activeTab === 'base' ? 'active' : ''}`} onClick={() => setActiveTab('base')}>Base de Donnees (N-2, N-1, N)</button>
@@ -259,6 +347,19 @@ const HistoricalData: React.FC = () => {
             return <option key={year} value={year}>{year}</option>;
           })}
         </select>
+
+        <label style={{ marginLeft: '20px' }}>Exercice :</label>
+        <select value={filterFiscalYear} onChange={(e) => setFilterFiscalYear(e.target.value)}>
+          <option value="">Tous (N-2, N-1, N)</option>
+          {baseYears.map(by => (<option key={by.year} value={by.year}>{by.label} - {by.year}</option>))}
+        </select>
+
+        <label style={{ marginLeft: '20px' }}>Ministere :</label>
+        <select value={filterMinistryId} onChange={(e) => setFilterMinistryId(e.target.value)}>
+          <option value="">Tous les ministeres</option>
+          {ministriesFromHistoricalData.map(m => (<option key={m.id} value={m.id}>{m.code} - {m.name}</option>))}
+        </select>
+
         <span className="nature-info">Saisie par nature de depenses</span>
       </div>
 
@@ -306,7 +407,7 @@ const HistoricalData: React.FC = () => {
               </div>
             ))}
           </div>
-          <DataTable data={historicalData} columns={columns} loading={loading} onEdit={handleEdit} onDelete={handleDelete} emptyMessage="Aucune donnee historique" />
+          <DataTable data={filteredData} columns={columns} loading={loading} onEdit={handleEdit} onDelete={handleDelete} emptyMessage="Aucune donnee historique" />
         </div>
       )}
 
@@ -331,7 +432,7 @@ const HistoricalData: React.FC = () => {
         footer={
           <>
             <Button variant="secondary" onClick={() => setIsModalOpen(false)}>Annuler</Button>
-            <Button onClick={() => handleSubmit({} as React.FormEvent)} loading={submitting}>{editingItem ? 'Mettre a jour' : 'Creer'}</Button>
+            <Button onClick={() => handleSubmit()} loading={submitting}>{editingItem ? 'Mettre a jour' : 'Creer'}</Button>
           </>
         }
       >
@@ -392,6 +493,53 @@ const HistoricalData: React.FC = () => {
             <textarea value={formData.notes} onChange={(e) => setFormData({ ...formData, notes: e.target.value })} rows={3} placeholder="Notes additionnelles..." />
           </div>
         </form>
+      </Modal>
+
+      <Modal
+        isOpen={deleteDialog.open}
+        onClose={() => !deleteDialog.loading && setDeleteDialog({ open: false, item: null, loading: false, error: null, constraints: null })}
+        title="Confirmer la suppression"
+        footer={
+          <>
+            <Button variant="secondary" onClick={() => setDeleteDialog({ open: false, item: null, loading: false, error: null, constraints: null })} disabled={deleteDialog.loading}>Annuler</Button>
+            <Button variant="danger" onClick={confirmDelete} loading={deleteDialog.loading} disabled={deleteDialog.loading || hasConstraints()}>Supprimer</Button>
+          </>
+        }
+      >
+        <div className="delete-dialog-content">
+          {deleteDialog.error && (
+            <div className="alert alert-error">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+              {deleteDialog.error}
+            </div>
+          )}
+
+          <p>Etes-vous sur de vouloir supprimer cette donnee historique pour <strong>{deleteDialog.item?.economicNature?.name}</strong> ({deleteDialog.item?.fiscalYear}) ?</p>
+
+          {deleteDialog.loading && !deleteDialog.constraints && (
+            <div className="loading-constraints"><span className="spinner"></span> Verification des contraintes...</div>
+          )}
+
+          {hasConstraints() && (
+            <div className="alert alert-error constraints-warning">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+              <div>
+                <strong>Suppression impossible - Donnees en cours d'exploitation:</strong>
+                <ul>
+                  {deleteDialog.constraints!.projections > 0 && (<li><strong>{deleteDialog.constraints!.projections} Projection(s)</strong> - Cette donnee est utilisee dans des projections</li>)}
+                  {deleteDialog.constraints!.usedInCalculations && (<li><strong>Calculs tendanciels</strong> - Cette donnee est utilisee dans les calculs de tendance (marquez-la comme exceptionnelle pour l'exclure)</li>)}
+                </ul>
+              </div>
+            </div>
+          )}
+
+          {!hasConstraints() && deleteDialog.constraints && (
+            <div className="alert alert-warning">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+              Cette action est irreversible.
+            </div>
+          )}
+        </div>
       </Modal>
     </div>
   );
