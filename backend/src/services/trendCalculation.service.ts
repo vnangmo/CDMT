@@ -380,7 +380,7 @@ export class TrendCalculationService {
         SUM(tp."projectedAmount1")::numeric as "totalN1",
         SUM(tp."projectedAmount2")::numeric as "totalN2",
         SUM(tp."projectedAmount3")::numeric as "totalN3",
-        COUNT(tp.id) as "projectionCount"
+        COUNT(tp.id)::integer as "projectionCount"
       FROM trend_projections tp
       JOIN ministries m ON tp."ministryId" = m.id
       WHERE tp."trendConfigId" = ${trendConfigId}
@@ -388,7 +388,15 @@ export class TrendCalculationService {
       ORDER BY "totalN1" DESC
     `;
 
-    return summary;
+    // Convertir les BigInt en nombres pour la sérialisation JSON
+    return summary.map(row => ({
+      ...row,
+      totalBase: Number(row.totalBase),
+      totalN1: Number(row.totalN1),
+      totalN2: Number(row.totalN2),
+      totalN3: Number(row.totalN3),
+      projectionCount: Number(row.projectionCount),
+    }));
   }
 
   /**
@@ -406,12 +414,12 @@ export class TrendCalculationService {
     const summary = await prisma.$queryRaw<any[]>`
       SELECT
         m."isPriority",
-        COUNT(DISTINCT m.id) as "ministryCount",
+        COUNT(DISTINCT m.id)::integer as "ministryCount",
         SUM(tp."baseAmount")::numeric as "totalBase",
         SUM(tp."projectedAmount1")::numeric as "totalN1",
         SUM(tp."projectedAmount2")::numeric as "totalN2",
         SUM(tp."projectedAmount3")::numeric as "totalN3",
-        COUNT(tp.id) as "projectionCount"
+        COUNT(tp.id)::integer as "projectionCount"
       FROM trend_projections tp
       JOIN ministries m ON tp."ministryId" = m.id
       WHERE tp."trendConfigId" = ${trendConfigId}
@@ -419,7 +427,16 @@ export class TrendCalculationService {
       ORDER BY m."isPriority" DESC
     `;
 
-    return summary;
+    // Convertir les BigInt en nombres pour la sérialisation JSON
+    return summary.map(row => ({
+      ...row,
+      ministryCount: Number(row.ministryCount),
+      totalBase: Number(row.totalBase),
+      totalN1: Number(row.totalN1),
+      totalN2: Number(row.totalN2),
+      totalN3: Number(row.totalN3),
+      projectionCount: Number(row.projectionCount),
+    }));
   }
 
   /**
