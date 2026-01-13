@@ -139,6 +139,8 @@ export class TrendCalculationService {
 
   /**
    * Calculer toutes les projections pour une configuration
+   * Utilise les taux spécifiques par projection (importés depuis Excel) si disponibles,
+   * sinon utilise le taux global de la configuration
    */
   static async calculateProjections(trendConfigId: string): Promise<{
     calculated: number;
@@ -153,7 +155,56 @@ export class TrendCalculationService {
       throw new NotFoundError('Configuration de budget tendanciel non trouvée');
     }
 
-    // Récupérer tous les budgets historiques uniques (par dimension)
+    // Récupérer les projections existantes (avec taux spécifiques importés)
+    const existingProjections = await prisma.trendProjection.findMany({
+      where: { trendConfigId },
+    });
+
+    // Si des projections existent déjà avec des taux spécifiques (import Excel),
+    // recalculer en utilisant CES taux spécifiques
+    if (existingProjections.length > 0) {
+      let calculated = 0;
+      const errors: any[] = [];
+
+      for (const projection of existingProjections) {
+        try {
+          const baseAmount = parseFloat(projection.baseAmount.toString());
+
+          // Utiliser les taux spécifiques de la projection (non le taux global)
+          const rate1 = parseFloat(projection.growthRate1?.toString() || '0');
+          const rate2 = parseFloat(projection.growthRate2?.toString() || '0');
+          const rate3 = parseFloat(projection.growthRate3?.toString() || '0');
+
+          // Formule conforme au Guide CDMT: Projection = Base × (1 + taux)
+          // Les taux sont NON composés (chaque année utilise la base comme référence)
+          const projectedAmount1 = baseAmount * (1 + rate1 / 100);
+          const projectedAmount2 = baseAmount * (1 + rate2 / 100);
+          const projectedAmount3 = baseAmount * (1 + rate3 / 100);
+
+          await prisma.trendProjection.update({
+            where: { id: projection.id },
+            data: {
+              projectedAmount1,
+              projectedAmount2,
+              projectedAmount3,
+              calculationMethod: 'RECALCULATED',
+              lastCalculatedAt: new Date(),
+            },
+          });
+
+          calculated++;
+        } catch (error: any) {
+          errors.push({
+            projectionId: projection.id,
+            error: error.message,
+          });
+        }
+      }
+
+      return { calculated, errors };
+    }
+
+    // Si pas de projections existantes, créer à partir des historiques avec taux global
     const historicals = await prisma.historicalBudget.findMany({
       where: { trendConfigId },
       select: {
@@ -168,10 +219,8 @@ export class TrendCalculationService {
     let calculated = 0;
     const errors: any[] = [];
 
-    // Pour chaque dimension unique, calculer la projection
     for (const item of historicals) {
       try {
-        // Calculer le montant de base
         const baseCalc = await this.calculateBaseAmount(
           trendConfigId,
           item.ministryId,
@@ -181,23 +230,22 @@ export class TrendCalculationService {
         );
 
         if (baseCalc.baseAmount === 0) {
-          continue; // Pas de données historiques, skip
+          continue;
         }
 
-        // Calculer les projections avec le taux global
+        // Utiliser le taux global pour les nouvelles projections
+        const globalRate = parseFloat(config.globalGrowthRate.toString());
         const projections = this.applyGlobalGrowthRate(
           baseCalc.baseAmount,
-          parseFloat(config.globalGrowthRate.toString()),
+          globalRate,
           config.projectionYears
         );
 
-        // Récupérer le statut prioritaire du ministère
         const ministry = await prisma.ministry.findUnique({
           where: { id: item.ministryId },
           select: { isPriority: true },
         });
 
-        // Créer ou mettre à jour la projection
         await prisma.trendProjection.upsert({
           where: {
             trendConfigId_ministryId_programId_actionId_activityId_economicNatureId_fundingSourceId: {
@@ -216,13 +264,13 @@ export class TrendCalculationService {
             temporaryExcluded: baseCalc.temporaryExcluded,
             projectionYear1: config.fiscalYear + 1,
             projectedAmount1: projections[0] || 0,
-            growthRate1: config.globalGrowthRate,
+            growthRate1: globalRate,
             projectionYear2: config.fiscalYear + 2,
             projectedAmount2: projections[1] || 0,
-            growthRate2: config.globalGrowthRate,
+            growthRate2: globalRate,
             projectionYear3: config.fiscalYear + 3,
             projectedAmount3: projections[2] || 0,
-            growthRate3: config.globalGrowthRate,
+            growthRate3: globalRate,
             isPriorityMinistry: ministry?.isPriority || false,
             calculationMethod: 'AUTO',
             lastCalculatedAt: new Date(),
@@ -238,13 +286,13 @@ export class TrendCalculationService {
             temporaryExcluded: baseCalc.temporaryExcluded,
             projectionYear1: config.fiscalYear + 1,
             projectedAmount1: projections[0] || 0,
-            growthRate1: config.globalGrowthRate,
+            growthRate1: globalRate,
             projectionYear2: config.fiscalYear + 2,
             projectedAmount2: projections[1] || 0,
-            growthRate2: config.globalGrowthRate,
+            growthRate2: globalRate,
             projectionYear3: config.fiscalYear + 3,
             projectedAmount3: projections[2] || 0,
-            growthRate3: config.globalGrowthRate,
+            growthRate3: globalRate,
             isPriorityMinistry: ministry?.isPriority || false,
             calculationMethod: 'AUTO',
             lastCalculatedAt: new Date(),
@@ -265,6 +313,7 @@ export class TrendCalculationService {
 
   /**
    * Recalculer une projection spécifique
+   * Utilise les taux spécifiques de la projection (conservés depuis l'import Excel)
    */
   static async recalculateProjection(projectionId: string): Promise<any> {
     const projection = await prisma.trendProjection.findUnique({
@@ -278,21 +327,17 @@ export class TrendCalculationService {
       throw new NotFoundError('Projection non trouvée');
     }
 
-    // Calculer le montant de base
-    const baseCalc = await this.calculateBaseAmount(
-      projection.trendConfigId,
-      projection.ministryId,
-      projection.programId,
-      projection.economicNatureId,
-      projection.fundingSourceId
-    );
+    const baseAmount = parseFloat(projection.baseAmount.toString());
 
-    // Calculer les projections
-    const projections = this.applyGlobalGrowthRate(
-      baseCalc.baseAmount,
-      parseFloat(projection.trendConfig.globalGrowthRate.toString()),
-      projection.trendConfig.projectionYears
-    );
+    // Utiliser les taux spécifiques de la projection (pas le taux global)
+    const rate1 = parseFloat(projection.growthRate1?.toString() || '0');
+    const rate2 = parseFloat(projection.growthRate2?.toString() || '0');
+    const rate3 = parseFloat(projection.growthRate3?.toString() || '0');
+
+    // Formule conforme au Guide CDMT: Projection = Base × (1 + taux)
+    const projectedAmount1 = baseAmount * (1 + rate1 / 100);
+    const projectedAmount2 = baseAmount * (1 + rate2 / 100);
+    const projectedAmount3 = baseAmount * (1 + rate3 / 100);
 
     // Récupérer le statut prioritaire
     const ministry = await prisma.ministry.findUnique({
@@ -304,16 +349,11 @@ export class TrendCalculationService {
     return await prisma.trendProjection.update({
       where: { id: projectionId },
       data: {
-        baseAmount: baseCalc.baseAmount,
-        historicalYearsUsed: baseCalc.historicalYearsUsed,
-        temporaryExcluded: baseCalc.temporaryExcluded,
-        projectedAmount1: projections[0] || 0,
-        projectedAmount2: projections[1] || 0,
-        projectedAmount3: projections[2] || 0,
-        growthRate1: projection.trendConfig.globalGrowthRate,
-        growthRate2: projection.trendConfig.globalGrowthRate,
-        growthRate3: projection.trendConfig.globalGrowthRate,
+        projectedAmount1,
+        projectedAmount2,
+        projectedAmount3,
         isPriorityMinistry: ministry?.isPriority || false,
+        calculationMethod: 'RECALCULATED',
         lastCalculatedAt: new Date(),
       },
     });
