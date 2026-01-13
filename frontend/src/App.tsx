@@ -4,7 +4,9 @@ import { ThemeProvider, createTheme } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
 import { AuthProvider } from './contexts/AuthContext';
 import { AlertProvider } from './contexts/AlertContext';
+import { FiscalYearProvider } from './contexts/FiscalYearContext';
 import MainLayout from './components/layout/MainLayout';
+import FiscalYearGuard from './components/FiscalYearGuard';
 import Login from './pages/Login';
 import './i18n/config';
 import './styles/rtl.css';
@@ -22,7 +24,8 @@ import EconomicNatures from './pages/EconomicNatures';
 import FundingSources from './pages/FundingSources';
 import FiscalYears from './pages/FiscalYears';
 import HistoricalData from './pages/HistoricalData';
-import MacroFrameworks from './pages/MacroFrameworks';
+import ImportTemplates from './pages/ImportTemplates';
+import MacroFrameworkEnhanced from './pages/MacroFrameworkEnhanced';
 import MacroProjections from './pages/MacroProjections';
 import RevenueProjections from './pages/RevenueProjections';
 import ExpenseProjections from './pages/ExpenseProjections';
@@ -39,6 +42,7 @@ import PolicyMeasures from './pages/PolicyMeasures';
 import FiscalMargin from './pages/FiscalMargin';
 import IntersectoralAllocation from './pages/IntersectoralAllocation';
 import SectoralTrends from './pages/SectoralTrends';
+import SectoralTrendsDetailed from './pages/SectoralTrendsDetailed';
 import SectoralMeasures from './pages/SectoralMeasures';
 import SectoralMeasureDetail from './pages/SectoralMeasureDetail';
 import Projects from './pages/Projects';
@@ -57,6 +61,8 @@ import Analytics from './pages/Analytics';
 import UserProfile from './pages/UserProfile';
 import UserSettings from './pages/UserSettings';
 import Settings from './pages/Settings';
+import Help from './pages/Help';
+import WorkflowSettings from './pages/WorkflowSettings';
 import ProtectedRoute from './components/ProtectedRoute';
 import './App.css';
 
@@ -164,6 +170,7 @@ function App() {
       <Router>
         <AuthProvider>
           <AlertProvider>
+          <FiscalYearProvider>
           <Routes>
             <Route path="/login" element={<Login />} />
 
@@ -172,7 +179,9 @@ function App() {
             path="/"
             element={
               <ProtectedRoute>
-                <MainLayout />
+                <FiscalYearGuard>
+                  <MainLayout />
+                </FiscalYearGuard>
               </ProtectedRoute>
             }
           >
@@ -180,7 +189,7 @@ function App() {
             <Route path="dashboard" element={<Dashboard />} />
 
             {/* Module 1: Cadre Macro & CBMT */}
-            <Route path="macro/frameworks" element={<MacroFrameworks />} />
+            <Route path="macro/frameworks" element={<MacroFrameworkEnhanced />} />
             <Route path="macro/projections" element={<MacroProjections />} />
             <Route path="macro/revenues/:macroFrameworkId" element={<RevenueProjections />} />
             <Route path="macro/expenses/:macroFrameworkId" element={<ExpenseProjections />} />
@@ -206,6 +215,7 @@ function App() {
 
             {/* Module 4: CDMT Sectoriels */}
             <Route path="sectoral/trends" element={<SectoralTrends />} />
+            <Route path="sectoral/trends-detailed" element={<SectoralTrendsDetailed />} />
             <Route path="sectoral-measures" element={<SectoralMeasures />} />
             <Route path="sectoral-measures/:id" element={<SectoralMeasureDetail />} />
             <Route path="projects" element={<Projects />} />
@@ -228,11 +238,13 @@ function App() {
             <Route path="economic-natures" element={<EconomicNatures />} />
             <Route path="fiscal-years" element={<FiscalYears />} />
             <Route path="historical-data" element={<HistoricalData />} />
+            <Route path="import-templates" element={<ImportTemplates />} />
 
             {/* Module 6: Workflow & Validation */}
             <Route path="workflow/validation" element={<SectoralMeasureValidation />} />
             <Route path="workflow/versions" element={<VersionHistory />} />
             <Route path="workflow/comments" element={<Comments />} />
+            <Route path="workflow/settings" element={<WorkflowSettings />} />
 
             {/* Module 7: Reporting */}
             <Route path="reports" element={<Reports />} />
@@ -250,6 +262,15 @@ function App() {
             <Route path="profile" element={<UserProfile />} />
             <Route path="user-settings" element={<UserSettings />} />
             <Route path="settings" element={<Settings />} />
+
+            {/* Help & Documentation */}
+            <Route path="help" element={<Help />} />
+            <Route path="help/documentation" element={<Help />} />
+            <Route path="help/videos" element={<Help />} />
+            <Route path="help/faq" element={<Help />} />
+            <Route path="help/glossary" element={<Help />} />
+            <Route path="help/shortcuts" element={<Help />} />
+            <Route path="help/roles" element={<Help />} />
           </Route>
 
           {/* Error Routes */}
@@ -287,6 +308,7 @@ function App() {
             }
           />
           </Routes>
+          </FiscalYearProvider>
         </AlertProvider>
         </AuthProvider>
       </Router>

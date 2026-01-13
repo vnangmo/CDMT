@@ -3,6 +3,7 @@ import { useNavigate, useLocation, Outlet } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import LanguageSelector from '../LanguageSelector';
 import NotificationCenter from '../NotificationCenter';
+import FiscalYearBadge from '../FiscalYearBadge';
 import {
   Box,
   Drawer,
@@ -56,6 +57,10 @@ import {
   Calculate as CalculateIcon,
   Tune as TuneIcon,
   Assessment as AssessmentIcon,
+  Help as HelpIcon,
+  MenuBook as DocumentIcon2,
+  VideoLibrary as VideoIcon,
+  QuestionAnswer as FaqIcon,
 } from '@mui/icons-material';
 import './MainLayout.css';
 
@@ -90,6 +95,7 @@ const MainLayout: React.FC = () => {
     workflow: false,
     reporting: false,
     admin: false,
+    help: false,
   });
 
   const handleMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
@@ -120,7 +126,7 @@ const MainLayout: React.FC = () => {
       icon: <MacroIcon />,
       color: '#1976d2',
       items: [
-        { path: '/macro/frameworks', label: 'Hypotheses macroeconomiques', icon: <ChartIcon fontSize="small" /> },
+        { path: '/macro/frameworks', label: 'Hypotheses & Indicateurs', icon: <ChartIcon fontSize="small" /> },
         { path: '/macro/projections', label: 'Projections macro', icon: <TrendingUpIcon fontSize="small" /> },
         { path: '/macro/tofe', label: 'TOFE previsionnel', icon: <DocumentIcon fontSize="small" /> },
       ],
@@ -156,6 +162,7 @@ const MainLayout: React.FC = () => {
       color: '#ed6c02',
       items: [
         { path: '/sectoral/trends', label: 'Tendanciels sectoriels', icon: <TrendingUpIcon fontSize="small" /> },
+        { path: '/sectoral/trends-detailed', label: 'Tendanciels detailles', icon: <TrendingUpIcon fontSize="small" /> },
         { path: '/sectoral-measures', label: 'Mesures nouvelles', icon: <CheckIcon fontSize="small" /> },
         { path: '/projects', label: 'Projets PIE/PIP', icon: <FolderIcon fontSize="small" /> },
         { path: '/action-plans', label: 'Plans d action sectoriels', icon: <ListIcon fontSize="small" /> },
@@ -174,6 +181,7 @@ const MainLayout: React.FC = () => {
         { path: '/funding-sources', label: 'Sources de financement', icon: <AccountBalanceIcon fontSize="small" /> },
         { path: '/fiscal-years', label: 'Annees fiscales', icon: <CalendarIcon fontSize="small" /> },
         { path: '/historical-data', label: 'Donnees historiques', icon: <HistoryIcon fontSize="small" /> },
+        { path: '/import-templates', label: "Modeles d'import", icon: <DownloadIcon fontSize="small" /> },
       ],
     },
     {
@@ -185,6 +193,7 @@ const MainLayout: React.FC = () => {
         { path: '/workflow/validation', label: 'Circuit de validation', icon: <CheckIcon fontSize="small" /> },
         { path: '/workflow/versions', label: 'Historique des versions', icon: <HistoryIcon fontSize="small" /> },
         { path: '/workflow/comments', label: 'Commentaires', icon: <CommentIcon fontSize="small" /> },
+        { path: '/workflow/settings', label: 'Configuration workflow', icon: <SettingsIcon fontSize="small" /> },
       ],
     },
     {
@@ -207,6 +216,21 @@ const MainLayout: React.FC = () => {
       items: [
         { path: '/users', label: 'Utilisateurs', icon: <PeopleIcon fontSize="small" /> },
         { path: '/roles', label: 'Roles et permissions', icon: <SecurityIcon fontSize="small" /> },
+      ],
+    },
+    {
+      key: 'help',
+      label: 'Aide & Support',
+      icon: <HelpIcon />,
+      color: '#00897b',
+      items: [
+        { path: '/help', label: 'Centre d aide', icon: <HelpIcon fontSize="small" /> },
+        { path: '/help/documentation', label: 'Documentation', icon: <DocumentIcon2 fontSize="small" /> },
+        { path: '/help/videos', label: 'Tutoriels video', icon: <VideoIcon fontSize="small" /> },
+        { path: '/help/faq', label: 'FAQ', icon: <FaqIcon fontSize="small" /> },
+        { path: '/help/glossary', label: 'Glossaire', icon: <DocumentIcon2 fontSize="small" /> },
+        { path: '/help/shortcuts', label: 'Raccourcis clavier', icon: <HelpIcon fontSize="small" /> },
+        { path: '/help/roles', label: 'Guide par role', icon: <PeopleIcon fontSize="small" /> },
       ],
     },
   ];
@@ -502,6 +526,8 @@ const MainLayout: React.FC = () => {
             </Typography>
 
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+              <FiscalYearBadge />
+
               <NotificationCenter />
 
               <IconButton onClick={() => navigate('/settings')}>
