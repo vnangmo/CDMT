@@ -571,4 +571,78 @@ router.get(
   CDMTGlobalController.validateConvergence
 );
 
+// ===== INTEGRATION MODULE FISCAL MARGINS =====
+
+/**
+ * @route   GET /api/v1/cdmt-global/fiscal-margin/:macroFrameworkId/available-margins
+ * @desc    Obtenir les marges disponibles depuis le module FiscalMargin
+ * @access  Private (CDMT_GLOBAL:READ)
+ */
+router.get(
+  '/fiscal-margin/:macroFrameworkId/available-margins',
+  authenticate,
+  authorize(['CDMT_GLOBAL:READ', 'ADMIN:READ']),
+  CDMTGlobalController.getAvailableMarginsFromModule
+);
+
+/**
+ * @route   GET /api/v1/cdmt-global/fiscal-margin/:macroFrameworkId/reserve-rates
+ * @desc    Obtenir les taux de réserves depuis le module FiscalMargin
+ * @access  Private (CDMT_GLOBAL:READ)
+ */
+router.get(
+  '/fiscal-margin/:macroFrameworkId/reserve-rates',
+  authenticate,
+  authorize(['CDMT_GLOBAL:READ', 'ADMIN:READ']),
+  CDMTGlobalController.getReserveRatesFromModule
+);
+
+/**
+ * @route   GET /api/v1/cdmt-global/fiscal-margin/:macroFrameworkId/distribution-keys
+ * @desc    Obtenir les clés de répartition depuis le module FiscalMargin
+ * @access  Private (CDMT_GLOBAL:READ)
+ */
+router.get(
+  '/fiscal-margin/:macroFrameworkId/distribution-keys',
+  authenticate,
+  authorize(['CDMT_GLOBAL:READ', 'ADMIN:READ']),
+  CDMTGlobalController.getDistributionKeysFromModule
+);
+
+/**
+ * @route   GET /api/v1/cdmt-global/fiscal-margin/:macroFrameworkId/ministry-margins
+ * @desc    Obtenir les marges par ministère depuis le module FiscalMargin
+ * @access  Private (CDMT_GLOBAL:READ)
+ */
+router.get(
+  '/fiscal-margin/:macroFrameworkId/ministry-margins',
+  authenticate,
+  authorize(['CDMT_GLOBAL:READ', 'ADMIN:READ']),
+  CDMTGlobalController.getMinistryMarginsFromModule
+);
+
+/**
+ * @route   GET /api/v1/cdmt-global/fiscal-margin/:macroFrameworkId/summary
+ * @desc    Obtenir le résumé de l'intégration FiscalMargin
+ * @access  Private (CDMT_GLOBAL:READ)
+ */
+router.get(
+  '/fiscal-margin/:macroFrameworkId/summary',
+  authenticate,
+  authorize(['CDMT_GLOBAL:READ', 'ADMIN:READ']),
+  CDMTGlobalController.getFiscalMarginIntegrationSummary
+);
+
+/**
+ * @route   POST /api/v1/cdmt-global/scenarios/:scenarioId/calculate-with-fiscal-margin
+ * @desc    Calculer les plafonds en utilisant les données du module FiscalMargin
+ * @access  Private (CDMT_GLOBAL:UPDATE)
+ */
+router.post(
+  '/scenarios/:scenarioId/calculate-with-fiscal-margin',
+  authenticate,
+  authorize(['CDMT_GLOBAL:UPDATE', 'ADMIN:UPDATE']),
+  CDMTGlobalController.calculateCeilingsWithFiscalMargin
+);
+
 export default router;

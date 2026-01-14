@@ -40,6 +40,7 @@ import CDMTGlobalScenarioDetail from './pages/CDMTGlobalScenarioDetail';
 import CDMTGlobalScenarioComparison from './pages/CDMTGlobalScenarioComparison';
 import PolicyMeasures from './pages/PolicyMeasures';
 import FiscalMargin from './pages/FiscalMargin';
+import FiscalMargins from './pages/FiscalMargins';
 import IntersectoralAllocation from './pages/IntersectoralAllocation';
 import SectoralTrends from './pages/SectoralTrends';
 import SectoralTrendsDetailed from './pages/SectoralTrendsDetailed';
@@ -210,6 +211,7 @@ function App() {
             <Route path="cdmt-global/compare" element={<CDMTGlobalScenarioComparison />} />
             <Route path="cdmt-global/policy-measures" element={<PolicyMeasures />} />
             <Route path="cdmt-global/fiscal-margin" element={<FiscalMargin />} />
+            <Route path="cdmt-global/fiscal-margins" element={<FiscalMargins />} />
             <Route path="cdmt-global/intersectoral" element={<IntersectoralAllocation />} />
             <Route path="ministerial-ceilings" element={<MinisterialCeilings />} />
 

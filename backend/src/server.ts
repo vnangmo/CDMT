@@ -213,6 +213,11 @@ import customExportRoutes from './routes/customExport.routes';
 import roleRoutes from './routes/role.routes';
 import permissionRoutes from './routes/permission.routes';
 import cdsmtSynthesisRoutes from './routes/cdsmtSynthesis.routes';
+import helpCenterRoutes from './routes/helpCenter.routes';
+import backupRoutes from './routes/backup.routes';
+import budgetLineRoutes from './routes/budgetLine.routes';
+import importTemplateRoutes from './routes/importTemplate.routes';
+import fiscalMarginRoutes from './routes/fiscalMargin.routes';
 
 // Import audit and scheduler utilities
 import { setupAuditMiddleware } from './middleware/audit.middleware';
@@ -298,6 +303,21 @@ app.use(`${config.apiPrefix}/permissions`, permissionRoutes);
 
 // CDSMT Synthesis routes (Maquette CDSMT - Figure 10 du guide)
 app.use(`${config.apiPrefix}/cdsmt-synthesis`, cdsmtSynthesisRoutes);
+
+// Help Center routes (Support tickets, Favorites, Feedback, History)
+app.use(`${config.apiPrefix}/help`, helpCenterRoutes);
+
+// Backup routes (Database backup and restore)
+app.use(`${config.apiPrefix}/backup`, backupRoutes);
+
+// Budget lines routes (Historical budget data)
+app.use(`${config.apiPrefix}/budget-lines`, budgetLineRoutes);
+
+// Import templates routes (Download CSV models)
+app.use(`${config.apiPrefix}/import-templates`, importTemplateRoutes);
+
+// Fiscal Margins routes (Marges de manœuvre)
+app.use(`${config.apiPrefix}/fiscal-margins`, fiscalMarginRoutes);
 
 // 404 handler
 app.use((req: Request, res: Response) => {

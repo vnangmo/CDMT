@@ -32,6 +32,11 @@ model User {
   ministry              Ministry?         @relation(fields: [ministryId], references: [id])
   role                  Role              @relation(fields: [roleId], references: [id])
   settings              UserSettings?
+  // Help Center relations
+  supportTickets        SupportTicket[]
+  helpFavorites         HelpFavorite[]
+  helpFeedback          HelpFeedback[]
+  helpViewHistory       HelpViewHistory[]
 
   @@map("users")
 }
@@ -152,6 +157,10 @@ model Ministry {
   pipProjects         PIPProject[] // SECTORAL: Public investment projects
   sectoralMeasures    SectoralMeasure[] // SPRINT 5.3: Sectoral new measures
   actionPlans         ActionPlan[] // SPRINT 5.3: Action plans
+
+  // Fiscal Margins relations
+  distributionKeys    DistributionKey[] @relation("MinistryDistributionKeys")
+  fiscalMargins       MinistryMargin[]  @relation("MinistryFiscalMargins")
 
   @@map("ministries")
 }
@@ -489,6 +498,52 @@ model MacroFramework {
   // Taux d'intérêt de référence
   interestRate          Decimal? @db.Decimal(5, 2) // Taux d'intérêt moyen sur la dette
 
+  // ============================================
+  // INDICATEURS MACROECONOMIQUES SUPPLEMENTAIRES
+  // Basés sur "Données hypothèses macroéconomiques.pdf"
+  // ============================================
+
+  // --- INDICATEURS DE PRODUCTION (PIB) ---
+  population            Decimal? @db.Decimal(12, 0) // Population totale
+  gdpPerCapita          Decimal? @db.Decimal(12, 2) // PIB par habitant (DJF)
+  agricultureShare      Decimal? @db.Decimal(5, 2)  // Part agriculture dans PIB (%)
+  industryShare         Decimal? @db.Decimal(5, 2)  // Part industrie dans PIB (%)
+  servicesShare         Decimal? @db.Decimal(5, 2)  // Part services dans PIB (%)
+
+  // --- INDICATEURS D'EMPLOI ---
+  unemploymentRate      Decimal? @db.Decimal(5, 2)  // Taux de chômage (%)
+  employmentRate        Decimal? @db.Decimal(5, 2)  // Taux d'emploi (%)
+  laborProductivity     Decimal? @db.Decimal(12, 2) // Productivité du travail (PIB/travailleur)
+
+  // --- INDICATEURS MONETAIRES ---
+  directInterestRate    Decimal? @db.Decimal(5, 2)  // Taux d'intérêt directeur (%)
+  moneySupply           Decimal? @db.Decimal(18, 2) // Masse monétaire (M2) en millions DJF
+
+  // --- COMMERCE EXTERIEUR ---
+  exports               Decimal? @db.Decimal(18, 2) // Exportations (millions DJF)
+  imports               Decimal? @db.Decimal(18, 2) // Importations (millions DJF)
+  tradeBalance          Decimal? @db.Decimal(18, 2) // Balance commerciale (millions DJF)
+  currentAccountBalance Decimal? @db.Decimal(18, 2) // Balance des paiements courants (millions DJF)
+  foreignReserves       Decimal? @db.Decimal(18, 2) // Réserves de change (millions USD)
+  reservesInMonths      Decimal? @db.Decimal(5, 2)  // Réserves en mois d'importations
+
+  // --- FINANCES PUBLIQUES ---
+  publicRevenue         Decimal? @db.Decimal(18, 2) // Recettes publiques totales (millions DJF)
+  publicExpenditure     Decimal? @db.Decimal(18, 2) // Dépenses publiques totales (millions DJF)
+  budgetBalance         Decimal? @db.Decimal(18, 2) // Solde budgétaire (millions DJF)
+  budgetBalanceToGDP    Decimal? @db.Decimal(5, 2)  // Solde budgétaire en % du PIB
+  publicDebt            Decimal? @db.Decimal(18, 2) // Dette publique totale (millions DJF)
+  debtToGDP             Decimal? @db.Decimal(5, 2)  // Dette publique en % du PIB
+  externalDebt          Decimal? @db.Decimal(18, 2) // Dette extérieure (millions USD)
+  domesticDebt          Decimal? @db.Decimal(18, 2) // Dette intérieure (millions DJF)
+
+  // --- INDICATEURS SOCIAUX / DEVELOPPEMENT ---
+  hdi                   Decimal? @db.Decimal(4, 3)  // Indice de développement humain (0-1)
+  povertyRate           Decimal? @db.Decimal(5, 2)  // Taux de pauvreté (%)
+  giniCoefficient       Decimal? @db.Decimal(4, 2)  // Coefficient de Gini (0-1)
+  lifeExpectancy        Decimal? @db.Decimal(5, 2)  // Espérance de vie (années)
+  literacyRate          Decimal? @db.Decimal(5, 2)  // Taux d'alphabétisation (%)
+
   // Enhanced workflow fields (5-level workflow)
   status          String    @default("DRAFT") // DRAFT, SUBMITTED, UNDER_REVIEW, VALIDATED, APPROVED, REJECTED
   workflowStage   String? // Current validation stage/role
@@ -514,6 +569,14 @@ model MacroFramework {
   tofeDocuments       TOFEDocument[]
   cbmtDocuments       CBMTDocument[]
   cdmtGlobalScenarios CDMTGlobalScenario[]
+
+  // Fiscal Margins relations
+  reserveRates           ReserveRate[]           @relation("ReserveRates")
+  availableFiscalMargins AvailableFiscalMargin[] @relation("AvailableFiscalMargins")
+  newMeasureRates        NewMeasureRate[]        @relation("NewMeasureRates")
+  newMeasures            NewMeasure[]            @relation("NewMeasures")
+  distributionKeys       DistributionKey[]       @relation("DistributionKeys")
+  ministryMargins        MinistryMargin[]        @relation("MinistryMargins")
 
   @@unique([year, budgetYear])
   @@map("macro_frameworks")
@@ -1739,4 +1802,284 @@ model WorkflowHistory {
   @@index([actionBy])
   @@index([actionAt])
   @@map("workflow_history")
+}
+
+// ===============================================
+// Support Tickets for Help Center
+// ===============================================
+
+model SupportTicket {
+  id          String   @id @default(uuid())
+  ticketNumber String  @unique // Format: TKT-2025-XXXX
+
+  // Ticket info
+  subject     String
+  message     String
+  category    String   // "technical", "access", "data", "feature", "training", "other"
+  priority    String   @default("medium") // "low", "medium", "high", "urgent"
+  status      String   @default("OPEN") // "OPEN", "IN_PROGRESS", "RESOLVED", "CLOSED"
+
+  // Contact info (for non-authenticated requests)
+  contactName  String
+  contactEmail String
+
+  // User relation (if authenticated)
+  userId      String?
+  user        User?    @relation(fields: [userId], references: [id])
+
+  // Resolution
+  assignedTo  String?
+  resolvedAt  DateTime?
+  resolution  String?
+
+  // Timestamps
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Responses
+  responses   SupportTicketResponse[]
+
+  @@index([status])
+  @@index([userId])
+  @@index([category])
+  @@index([priority])
+  @@index([createdAt])
+  @@map("support_tickets")
+}
+
+model SupportTicketResponse {
+  id        String   @id @default(uuid())
+  ticketId  String
+  ticket    SupportTicket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+
+  message   String
+  isStaff   Boolean  @default(false) // true if response from support staff
+  authorName String
+  authorEmail String?
+
+  createdAt DateTime @default(now())
+
+  @@index([ticketId])
+  @@map("support_ticket_responses")
+}
+
+// Help Center Favorites
+model HelpFavorite {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  itemType  String   // "document", "video"
+  itemId    String   // ID of the document or video
+
+  createdAt DateTime @default(now())
+
+  @@unique([userId, itemType, itemId])
+  @@index([userId])
+  @@map("help_favorites")
+}
+
+// Help Center Feedback
+model HelpFeedback {
+  id        String   @id @default(uuid())
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id])
+
+  itemType  String   // "document", "video", "faq", "glossary"
+  itemId    String
+
+  isHelpful Boolean
+  comment   String?
+
+  createdAt DateTime @default(now())
+
+  @@unique([userId, itemType, itemId])
+  @@index([itemType, itemId])
+  @@map("help_feedback")
+}
+
+// Help Center View History
+model HelpViewHistory {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  itemType  String   // "document", "video"
+  itemId    String
+  itemTitle String
+
+  viewedAt  DateTime @default(now())
+
+  @@index([userId, viewedAt])
+  @@map("help_view_history")
+}
+
+// ============================================
+// Module Marges de Manœuvre (Fiscal Margins)
+// ============================================
+
+// Taux des réserves par nature de dépense
+model ReserveRate {
+  id               String  @id @default(uuid())
+  macroFrameworkId String
+
+  expenseCategory  String  // Salaires, Matériels, Transferts, etc.
+  categoryCode     String  // Code de la catégorie (2.1, 2.2, etc.)
+
+  // Taux pour chaque année de projection
+  contingencyRateY1     Decimal @default(0) @db.Decimal(8, 4) // Réserves pour imprévus Year 1
+  programmingRateY1     Decimal @default(0) @db.Decimal(8, 4) // Réserves de programmation Year 1
+  contingencyRateY2     Decimal @default(0) @db.Decimal(8, 4) // Réserves pour imprévus Year 2
+  programmingRateY2     Decimal @default(0) @db.Decimal(8, 4) // Réserves de programmation Year 2
+  contingencyRateY3     Decimal @default(0) @db.Decimal(8, 4) // Réserves pour imprévus Year 3
+  programmingRateY3     Decimal @default(0) @db.Decimal(8, 4) // Réserves de programmation Year 3
+
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  macroFramework MacroFramework @relation("ReserveRates", fields: [macroFrameworkId], references: [id], onDelete: Cascade)
+
+  @@unique([macroFrameworkId, categoryCode])
+  @@index([macroFrameworkId])
+  @@map("reserve_rates")
+}
+
+// Marge de manœuvre disponible par nature de dépense
+model AvailableFiscalMargin {
+  id               String  @id @default(uuid())
+  macroFrameworkId String
+
+  expenseCategory  String  // Nom de la catégorie
+  categoryCode     String  // Code de la catégorie
+
+  // Année 1
+  cbmtAmountY1            Decimal @default(0) @db.Decimal(18, 2) // Montant CBMT
+  trendAmountY1           Decimal @default(0) @db.Decimal(18, 2) // Montant Tendanciel
+  marginBeforeReservesY1  Decimal @default(0) @db.Decimal(18, 2) // Marge avant réserves
+  contingencyReservesY1   Decimal @default(0) @db.Decimal(18, 2) // Réserves pour imprévus
+  programmingReservesY1   Decimal @default(0) @db.Decimal(18, 2) // Réserves de programmation
+  availableMarginY1       Decimal @default(0) @db.Decimal(18, 2) // Marge disponible
+
+  // Année 2
+  cbmtAmountY2            Decimal @default(0) @db.Decimal(18, 2)
+  trendAmountY2           Decimal @default(0) @db.Decimal(18, 2)
+  marginBeforeReservesY2  Decimal @default(0) @db.Decimal(18, 2)
+  contingencyReservesY2   Decimal @default(0) @db.Decimal(18, 2)
+  programmingReservesY2   Decimal @default(0) @db.Decimal(18, 2)
+  availableMarginY2       Decimal @default(0) @db.Decimal(18, 2)
+
+  // Année 3
+  cbmtAmountY3            Decimal @default(0) @db.Decimal(18, 2)
+  trendAmountY3           Decimal @default(0) @db.Decimal(18, 2)
+  marginBeforeReservesY3  Decimal @default(0) @db.Decimal(18, 2)
+  contingencyReservesY3   Decimal @default(0) @db.Decimal(18, 2)
+  programmingReservesY3   Decimal @default(0) @db.Decimal(18, 2)
+  availableMarginY3       Decimal @default(0) @db.Decimal(18, 2)
+
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  macroFramework MacroFramework @relation("AvailableFiscalMargins", fields: [macroFrameworkId], references: [id], onDelete: Cascade)
+
+  @@unique([macroFrameworkId, categoryCode])
+  @@index([macroFrameworkId])
+  @@map("available_fiscal_margins")
+}
+
+// Taux des mesures nouvelles centrales
+model NewMeasureRate {
+  id               String  @id @default(uuid())
+  macroFrameworkId String
+
+  expenseCategory  String  // Nom de la catégorie
+  categoryCode     String  // Code de la catégorie
+
+  rateY1           Decimal @default(0) @db.Decimal(8, 4) // Taux mesures nouvelles Year 1
+  rateY2           Decimal @default(0) @db.Decimal(8, 4) // Taux mesures nouvelles Year 2
+  rateY3           Decimal @default(0) @db.Decimal(8, 4) // Taux mesures nouvelles Year 3
+
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  macroFramework MacroFramework @relation("NewMeasureRates", fields: [macroFrameworkId], references: [id], onDelete: Cascade)
+
+  @@unique([macroFrameworkId, categoryCode])
+  @@index([macroFrameworkId])
+  @@map("new_measure_rates")
+}
+
+// Mesures nouvelles centrales (montants)
+model NewMeasure {
+  id               String  @id @default(uuid())
+  macroFrameworkId String
+
+  measureName      String  // Nom de la mesure (ex: "VALEUR DU PROJET")
+  expenseCategory  String  // Catégorie de dépense
+  categoryCode     String  // Code de la catégorie
+  description      String?
+
+  amountY1         Decimal @default(0) @db.Decimal(18, 2) // Montant Year 1
+  amountY2         Decimal @default(0) @db.Decimal(18, 2) // Montant Year 2
+  amountY3         Decimal @default(0) @db.Decimal(18, 2) // Montant Year 3
+
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  macroFramework MacroFramework @relation("NewMeasures", fields: [macroFrameworkId], references: [id], onDelete: Cascade)
+
+  @@index([macroFrameworkId])
+  @@map("new_measures")
+}
+
+// Clé de répartition par ministère
+model DistributionKey {
+  id               String  @id @default(uuid())
+  macroFrameworkId String
+  ministryId       String
+
+  rateY1           Decimal @default(0) @db.Decimal(8, 6) // Taux de répartition Year 1
+  rateY2           Decimal @default(0) @db.Decimal(8, 6) // Taux de répartition Year 2
+  rateY3           Decimal @default(0) @db.Decimal(8, 6) // Taux de répartition Year 3
+
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  macroFramework MacroFramework @relation("DistributionKeys", fields: [macroFrameworkId], references: [id], onDelete: Cascade)
+  ministry       Ministry       @relation("MinistryDistributionKeys", fields: [ministryId], references: [id], onDelete: Cascade)
+
+  @@unique([macroFrameworkId, ministryId])
+  @@index([macroFrameworkId])
+  @@index([ministryId])
+  @@map("distribution_keys")
+}
+
+// Marge répartie par ministère et par nature de dépense
+model MinistryMargin {
+  id               String  @id @default(uuid())
+  macroFrameworkId String
+  ministryId       String
+
+  expenseCategory  String  // Catégorie de dépense
+  categoryCode     String  // Code de la catégorie
+
+  marginY1         Decimal @default(0) @db.Decimal(18, 2) // Marge Year 1
+  marginY2         Decimal @default(0) @db.Decimal(18, 2) // Marge Year 2
+  marginY3         Decimal @default(0) @db.Decimal(18, 2) // Marge Year 3
+
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  macroFramework MacroFramework @relation("MinistryMargins", fields: [macroFrameworkId], references: [id], onDelete: Cascade)
+  ministry       Ministry       @relation("MinistryFiscalMargins", fields: [ministryId], references: [id], onDelete: Cascade)
+
+  @@unique([macroFrameworkId, ministryId, categoryCode])
+  @@index([macroFrameworkId])
+  @@index([ministryId])
+  @@map("ministry_margins")
 }

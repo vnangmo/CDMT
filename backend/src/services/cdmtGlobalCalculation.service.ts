@@ -712,6 +712,363 @@ export class CDMTGlobalCalculationService {
     });
   }
 
+  // ========================================
+  // INTEGRATION MODULE FISCAL MARGINS
+  // ========================================
+
+  /**
+   * Récupérer les marges disponibles depuis le module FiscalMargin
+   * Utilise les données importées depuis Excel (feuille "Marge de manoeuvre disponible")
+   */
+  static async getAvailableMarginsFromModule(
+    macroFrameworkId: string
+  ): Promise<{
+    byCategory: Record<string, { y1: number; y2: number; y3: number }>;
+    totals: { y1: number; y2: number; y3: number };
+  }> {
+    const availableMargins = await prisma.availableFiscalMargin.findMany({
+      where: { macroFrameworkId, isActive: true },
+    });
+
+    const byCategory: Record<string, { y1: number; y2: number; y3: number }> = {};
+    let totalY1 = 0, totalY2 = 0, totalY3 = 0;
+
+    for (const margin of availableMargins) {
+      byCategory[margin.categoryCode] = {
+        y1: parseFloat(margin.availableMarginY1.toString()),
+        y2: parseFloat(margin.availableMarginY2.toString()),
+        y3: parseFloat(margin.availableMarginY3.toString()),
+      };
+      totalY1 += parseFloat(margin.availableMarginY1.toString());
+      totalY2 += parseFloat(margin.availableMarginY2.toString());
+      totalY3 += parseFloat(margin.availableMarginY3.toString());
+    }
+
+    return {
+      byCategory,
+      totals: { y1: totalY1, y2: totalY2, y3: totalY3 },
+    };
+  }
+
+  /**
+   * Récupérer les taux de réserves depuis le module FiscalMargin
+   * Utilise les données importées depuis Excel (feuille "Taux des réserves")
+   */
+  static async getReserveRatesFromModule(
+    macroFrameworkId: string
+  ): Promise<Record<string, {
+    contingencyY1: number; programmingY1: number;
+    contingencyY2: number; programmingY2: number;
+    contingencyY3: number; programmingY3: number;
+  }>> {
+    const reserveRates = await prisma.reserveRate.findMany({
+      where: { macroFrameworkId, isActive: true },
+    });
+
+    const ratesByCategory: Record<string, any> = {};
+
+    for (const rate of reserveRates) {
+      ratesByCategory[rate.categoryCode] = {
+        contingencyY1: parseFloat(rate.contingencyRateY1.toString()),
+        programmingY1: parseFloat(rate.programmingRateY1.toString()),
+        contingencyY2: parseFloat(rate.contingencyRateY2.toString()),
+        programmingY2: parseFloat(rate.programmingRateY2.toString()),
+        contingencyY3: parseFloat(rate.contingencyRateY3.toString()),
+        programmingY3: parseFloat(rate.programmingRateY3.toString()),
+      };
+    }
+
+    return ratesByCategory;
+  }
+
+  /**
+   * Récupérer les clés de répartition depuis le module FiscalMargin
+   * Utilise les données importées depuis Excel (feuille "Clé répartition")
+   */
+  static async getDistributionKeysFromModule(
+    macroFrameworkId: string
+  ): Promise<{
+    keys: Record<string, { y1: number; y2: number; y3: number }>;
+    totalRate: { y1: number; y2: number; y3: number };
+  }> {
+    const distributionKeys = await prisma.distributionKey.findMany({
+      where: { macroFrameworkId, isActive: true },
+      include: { ministry: true },
+    });
+
+    const keys: Record<string, { y1: number; y2: number; y3: number }> = {};
+    let totalY1 = 0, totalY2 = 0, totalY3 = 0;
+
+    for (const key of distributionKeys) {
+      keys[key.ministryId] = {
+        y1: parseFloat(key.rateY1.toString()),
+        y2: parseFloat(key.rateY2.toString()),
+        y3: parseFloat(key.rateY3.toString()),
+      };
+      totalY1 += parseFloat(key.rateY1.toString());
+      totalY2 += parseFloat(key.rateY2.toString());
+      totalY3 += parseFloat(key.rateY3.toString());
+    }
+
+    return {
+      keys,
+      totalRate: { y1: totalY1, y2: totalY2, y3: totalY3 },
+    };
+  }
+
+  /**
+   * Récupérer les marges par ministère depuis le module FiscalMargin
+   * Utilise les données importées depuis Excel (feuille "Marge par ministère")
+   */
+  static async getMinistryMarginsFromModule(
+    macroFrameworkId: string
+  ): Promise<{
+    byMinistry: Record<string, {
+      byCategory: Record<string, { y1: number; y2: number; y3: number }>;
+      totals: { y1: number; y2: number; y3: number };
+    }>;
+    grandTotal: { y1: number; y2: number; y3: number };
+  }> {
+    const ministryMargins = await prisma.ministryMargin.findMany({
+      where: { macroFrameworkId, isActive: true },
+      include: { ministry: true },
+    });
+
+    const byMinistry: Record<string, any> = {};
+    let grandTotalY1 = 0, grandTotalY2 = 0, grandTotalY3 = 0;
+
+    for (const margin of ministryMargins) {
+      if (!byMinistry[margin.ministryId]) {
+        byMinistry[margin.ministryId] = {
+          ministryName: margin.ministry.name,
+          ministryCode: margin.ministry.code,
+          byCategory: {},
+          totals: { y1: 0, y2: 0, y3: 0 },
+        };
+      }
+
+      const marginY1 = parseFloat(margin.marginY1.toString());
+      const marginY2 = parseFloat(margin.marginY2.toString());
+      const marginY3 = parseFloat(margin.marginY3.toString());
+
+      byMinistry[margin.ministryId].byCategory[margin.categoryCode] = {
+        y1: marginY1,
+        y2: marginY2,
+        y3: marginY3,
+      };
+
+      byMinistry[margin.ministryId].totals.y1 += marginY1;
+      byMinistry[margin.ministryId].totals.y2 += marginY2;
+      byMinistry[margin.ministryId].totals.y3 += marginY3;
+
+      grandTotalY1 += marginY1;
+      grandTotalY2 += marginY2;
+      grandTotalY3 += marginY3;
+    }
+
+    return {
+      byMinistry,
+      grandTotal: { y1: grandTotalY1, y2: grandTotalY2, y3: grandTotalY3 },
+    };
+  }
+
+  /**
+   * Calculer les plafonds ministériels en utilisant les données du module FiscalMargin
+   * Formule: Plafond = Tendanciel + Mesures Nouvelles + Marge Allouée (depuis FiscalMargin)
+   */
+  static async calculateCeilingsWithFiscalMarginModule(
+    scenarioId: string
+  ): Promise<{
+    calculated: number;
+    updated: number;
+    usedFiscalMarginData: boolean;
+  }> {
+    const scenario = await prisma.cDMTGlobalScenario.findUnique({
+      where: { id: scenarioId },
+    });
+
+    if (!scenario) {
+      throw new NotFoundError('Scénario CDMT Global non trouvé');
+    }
+
+    // Récupérer le macroFrameworkId lié au scénario
+    const macroFramework = await prisma.macroFramework.findFirst({
+      where: { fiscalYearId: scenario.fiscalYear.toString() },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    let usedFiscalMarginData = false;
+    let ministryMarginsData: Record<string, { y1: number; y2: number; y3: number }> = {};
+
+    if (macroFramework) {
+      // Essayer de récupérer les marges depuis le module FiscalMargin
+      const fiscalMarginData = await this.getMinistryMarginsFromModule(macroFramework.id);
+
+      if (Object.keys(fiscalMarginData.byMinistry).length > 0) {
+        usedFiscalMarginData = true;
+
+        // Convertir en format simple ministryId -> totals
+        for (const [ministryId, data] of Object.entries(fiscalMarginData.byMinistry)) {
+          ministryMarginsData[ministryId] = data.totals;
+        }
+      }
+    }
+
+    // Récupérer les données de base
+    const baselineByMinistry = scenario.trendConfigId
+      ? await this.aggregateAllBaselinesByMinistry(scenario.trendConfigId)
+      : {};
+
+    const measuresByMinistry = await this.aggregatePolicyMeasuresByMinistry(scenarioId);
+
+    // Récupérer les allocations manuelles (fallback si pas de données FiscalMargin)
+    const allocations = await prisma.marginAllocation.findMany({
+      where: { scenarioId },
+    });
+
+    // Récupérer tous les ministères
+    const ministries = await prisma.ministry.findMany({
+      where: { isActive: true },
+    });
+
+    let calculated = 0;
+    let updated = 0;
+
+    // Calculer les plafonds pour chaque ministère
+    for (const ministry of ministries) {
+      const baseline = baselineByMinistry[ministry.id] || { y1: 0, y2: 0, y3: 0 };
+      const measures = measuresByMinistry[ministry.id] || { y1: 0, y2: 0, y3: 0 };
+
+      // Utiliser les marges du module FiscalMargin si disponibles
+      let allocatedY1 = 0, allocatedY2 = 0, allocatedY3 = 0;
+
+      if (usedFiscalMarginData && ministryMarginsData[ministry.id]) {
+        allocatedY1 = ministryMarginsData[ministry.id].y1;
+        allocatedY2 = ministryMarginsData[ministry.id].y2;
+        allocatedY3 = ministryMarginsData[ministry.id].y3;
+      } else {
+        // Fallback sur les allocations manuelles
+        const allocation = allocations.find((a) => a.ministryId === ministry.id);
+        allocatedY1 = allocation ? parseFloat(allocation.allocatedY1.toString()) : 0;
+        allocatedY2 = allocation ? parseFloat(allocation.allocatedY2.toString()) : 0;
+        allocatedY3 = allocation ? parseFloat(allocation.allocatedY3.toString()) : 0;
+      }
+
+      // Calculer les plafonds
+      const ceilingY1 = baseline.y1 + measures.y1 + allocatedY1;
+      const ceilingY2 = baseline.y2 + measures.y2 + allocatedY2;
+      const ceilingY3 = baseline.y3 + measures.y3 + allocatedY3;
+
+      // Upsert pour Y1, Y2, Y3
+      for (let yearOffset = 1; yearOffset <= 3; yearOffset++) {
+        const yearData = yearOffset === 1
+          ? { baseline: baseline.y1, measures: measures.y1, allocated: allocatedY1, ceiling: ceilingY1 }
+          : yearOffset === 2
+          ? { baseline: baseline.y2, measures: measures.y2, allocated: allocatedY2, ceiling: ceilingY2 }
+          : { baseline: baseline.y3, measures: measures.y3, allocated: allocatedY3, ceiling: ceilingY3 };
+
+        await prisma.ministerialCeiling.upsert({
+          where: {
+            scenarioId_ministryId_budgetYear_year: {
+              scenarioId,
+              ministryId: ministry.id,
+              budgetYear: scenario.fiscalYear,
+              year: scenario.fiscalYear + yearOffset,
+            },
+          },
+          create: {
+            scenarioId,
+            ministryId: ministry.id,
+            budgetYear: scenario.fiscalYear,
+            year: scenario.fiscalYear + yearOffset,
+            baseline: yearData.baseline,
+            newMeasures: yearData.measures,
+            allocatedSpace: yearData.allocated,
+            ceiling: yearData.ceiling,
+            calculatedAt: new Date(),
+          },
+          update: {
+            baseline: yearData.baseline,
+            newMeasures: yearData.measures,
+            allocatedSpace: yearData.allocated,
+            ceiling: yearData.ceiling,
+            calculatedAt: new Date(),
+          },
+        });
+
+        calculated++;
+        updated++;
+      }
+    }
+
+    // Mettre à jour les totaux du scénario
+    await this.calculateScenarioTotals(scenarioId);
+
+    return { calculated, updated, usedFiscalMarginData };
+  }
+
+  /**
+   * Obtenir un résumé complet des liaisons CDMT Global avec FiscalMargin
+   */
+  static async getFiscalMarginIntegrationSummary(
+    macroFrameworkId: string
+  ): Promise<{
+    hasData: boolean;
+    reserveRates: number;
+    availableMargins: number;
+    distributionKeys: number;
+    ministryMargins: number;
+    totals: {
+      availableMarginY1: number;
+      availableMarginY2: number;
+      availableMarginY3: number;
+      ministryMarginY1: number;
+      ministryMarginY2: number;
+      ministryMarginY3: number;
+    };
+  }> {
+    const [reserveRates, availableMargins, distributionKeys, ministryMargins] = await Promise.all([
+      prisma.reserveRate.count({ where: { macroFrameworkId, isActive: true } }),
+      prisma.availableFiscalMargin.findMany({ where: { macroFrameworkId, isActive: true } }),
+      prisma.distributionKey.count({ where: { macroFrameworkId, isActive: true } }),
+      prisma.ministryMargin.findMany({ where: { macroFrameworkId, isActive: true } }),
+    ]);
+
+    const availableMarginTotals = availableMargins.reduce(
+      (acc, m) => ({
+        y1: acc.y1 + parseFloat(m.availableMarginY1.toString()),
+        y2: acc.y2 + parseFloat(m.availableMarginY2.toString()),
+        y3: acc.y3 + parseFloat(m.availableMarginY3.toString()),
+      }),
+      { y1: 0, y2: 0, y3: 0 }
+    );
+
+    const ministryMarginTotals = ministryMargins.reduce(
+      (acc, m) => ({
+        y1: acc.y1 + parseFloat(m.marginY1.toString()),
+        y2: acc.y2 + parseFloat(m.marginY2.toString()),
+        y3: acc.y3 + parseFloat(m.marginY3.toString()),
+      }),
+      { y1: 0, y2: 0, y3: 0 }
+    );
+
+    return {
+      hasData: reserveRates > 0 || availableMargins.length > 0 || distributionKeys > 0 || ministryMargins.length > 0,
+      reserveRates,
+      availableMargins: availableMargins.length,
+      distributionKeys,
+      ministryMargins: ministryMargins.length,
+      totals: {
+        availableMarginY1: availableMarginTotals.y1,
+        availableMarginY2: availableMarginTotals.y2,
+        availableMarginY3: availableMarginTotals.y3,
+        ministryMarginY1: ministryMarginTotals.y1,
+        ministryMarginY2: ministryMarginTotals.y2,
+        ministryMarginY3: ministryMarginTotals.y3,
+      },
+    };
+  }
+
   /**
    * Valider l'allocation de la marge fiscale
    */

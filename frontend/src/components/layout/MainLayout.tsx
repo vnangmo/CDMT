@@ -151,6 +151,7 @@ const MainLayout: React.FC = () => {
         { path: '/cdmt-global', label: 'Scenarios CDMT', icon: <TimelineIcon fontSize="small" /> },
         { path: '/cdmt-global/policy-measures', label: 'Mesures nouvelles centrales', icon: <TuneIcon fontSize="small" /> },
         { path: '/cdmt-global/fiscal-margin', label: 'Marge de manoeuvre', icon: <EqualizerIcon fontSize="small" /> },
+        { path: '/cdmt-global/fiscal-margins', label: 'Parametrage marges', icon: <TuneIcon fontSize="small" /> },
         { path: '/cdmt-global/intersectoral', label: 'Repartition intersectorielle', icon: <PieChartIcon fontSize="small" /> },
         { path: '/ministerial-ceilings', label: 'Plafonds ministeriels', icon: <MoneyIcon fontSize="small" /> },
       ],

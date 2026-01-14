@@ -930,4 +930,111 @@ export class CDMTGlobalController {
       next(error);
     }
   }
+
+  // ===== INTEGRATION MODULE FISCAL MARGINS =====
+
+  /**
+   * Obtenir les marges disponibles depuis le module FiscalMargin
+   */
+  static async getAvailableMarginsFromModule(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { macroFrameworkId } = req.params;
+      const result = await CDMTGlobalCalculationService.getAvailableMarginsFromModule(macroFrameworkId);
+
+      res.status(200).json({
+        status: 'success',
+        data: result,
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  /**
+   * Obtenir les taux de réserves depuis le module FiscalMargin
+   */
+  static async getReserveRatesFromModule(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { macroFrameworkId } = req.params;
+      const result = await CDMTGlobalCalculationService.getReserveRatesFromModule(macroFrameworkId);
+
+      res.status(200).json({
+        status: 'success',
+        data: result,
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  /**
+   * Obtenir les clés de répartition depuis le module FiscalMargin
+   */
+  static async getDistributionKeysFromModule(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { macroFrameworkId } = req.params;
+      const result = await CDMTGlobalCalculationService.getDistributionKeysFromModule(macroFrameworkId);
+
+      res.status(200).json({
+        status: 'success',
+        data: result,
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  /**
+   * Obtenir les marges par ministère depuis le module FiscalMargin
+   */
+  static async getMinistryMarginsFromModule(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { macroFrameworkId } = req.params;
+      const result = await CDMTGlobalCalculationService.getMinistryMarginsFromModule(macroFrameworkId);
+
+      res.status(200).json({
+        status: 'success',
+        data: result,
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  /**
+   * Calculer les plafonds en utilisant les données du module FiscalMargin
+   */
+  static async calculateCeilingsWithFiscalMargin(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { scenarioId } = req.params;
+      const result = await CDMTGlobalCalculationService.calculateCeilingsWithFiscalMarginModule(scenarioId);
+
+      res.status(200).json({
+        status: 'success',
+        data: result,
+        message: result.usedFiscalMarginData
+          ? `${result.calculated} plafond(s) calculé(s) avec les données du module FiscalMargin`
+          : `${result.calculated} plafond(s) calculé(s) avec les allocations manuelles (pas de données FiscalMargin)`,
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  /**
+   * Obtenir le résumé de l'intégration FiscalMargin
+   */
+  static async getFiscalMarginIntegrationSummary(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { macroFrameworkId } = req.params;
+      const result = await CDMTGlobalCalculationService.getFiscalMarginIntegrationSummary(macroFrameworkId);
+
+      res.status(200).json({
+        status: 'success',
+        data: result,
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
 }
